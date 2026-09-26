@@ -311,23 +311,49 @@ func update_hud() -> void:
 	var depth: int = maxi(0,int(round((-player.global_position.z)/BLOCK_SIZE)))
 	hud.update_status(battery,flashlight_on,torch_count,total,depth,coins,status_text)
 
+func find_mine_target() -> Node3D:
+	var forward3: Vector3 = -player.global_transform.basis.z
+	var forward := Vector2(forward3.x,forward3.z)
+	if forward.length() < 0.01:
+		forward = Vector2(0,-1)
+	else:
+		forward = forward.normalized()
+
+	var best: Node3D = null
+	var best_score: float = 9999.0
+
+	for key in blocks.keys():
+		var block = blocks[key] as Node3D
+		if block == null or not is_instance_valid(block):
+			continue
+
+		var delta3: Vector3 = block.global_position - player.global_position
+		var delta := Vector2(delta3.x,delta3.z)
+		var distance: float = delta.length()
+		if distance <= 0.01 or distance > MINE_RANGE + 0.65:
+			continue
+
+		var direction: Vector2 = delta / distance
+		var facing_score: float = forward.dot(direction)
+		if facing_score < 0.30:
+			continue
+
+		# Prefer the nearest block that is mostly in front of the miner.
+		var score: float = distance + (1.0-facing_score)*0.9
+		if score < best_score:
+			best_score = score
+			best = block
+
+	return best
+
 func mine_block() -> void:
 	if mine_cooldown > 0.0:
 		return
 	mine_cooldown = 0.23
 
-	var origin: Vector3 = player.global_position + Vector3(0,0.85,0)
-	var forward: Vector3 = -player.global_transform.basis.z.normalized()
-	var query := PhysicsRayQueryParameters3D.create(origin,origin+forward*MINE_RANGE)
-	query.exclude = [player.get_rid()]
-	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
-	if hit.is_empty():
-		show_status("Кирка не достаёт до породы")
-		return
-
-	var collider = hit.get("collider")
-	if collider == null or not collider.is_in_group("mine_block"):
-		show_status("Здесь нечего добывать")
+	var collider: Node3D = find_mine_target()
+	if collider == null:
+		show_status("Подойди ближе и повернись к блоку")
 		return
 
 	var hp: int = int(collider.get_meta("hp")) - 1
