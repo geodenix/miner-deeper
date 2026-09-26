@@ -18,7 +18,7 @@
     "scaleMode": "linear",
     "sizeOnStartupMode": "adaptHeight",
     "templateSlug": "",
-    "version": "0.3.0",
+    "version": "0.2.2",
     "name": "Miner Deeper GDevelop 3D",
     "description": "Мобильный 3D-прототип шахтёра для GDevelop: движение, кирка, разрушаемые рудные блоки и рюкзак.",
     "author": "Geodenix",
@@ -188,38 +188,6 @@
         "kind": "image",
         "metadata": "",
         "name": "assets/PickaxeButton.svg",
-        "smoothed": true,
-        "userAdded": true
-      },
-      {
-        "file": "assets/StoneBlock.svg",
-        "kind": "image",
-        "metadata": "",
-        "name": "assets\\StoneBlock.svg",
-        "smoothed": true,
-        "userAdded": true
-      },
-      {
-        "file": "assets/CoalBlock.svg",
-        "kind": "image",
-        "metadata": "",
-        "name": "assets\\CoalBlock.svg",
-        "smoothed": true,
-        "userAdded": true
-      },
-      {
-        "file": "assets/IronBlock.svg",
-        "kind": "image",
-        "metadata": "",
-        "name": "assets\\IronBlock.svg",
-        "smoothed": true,
-        "userAdded": true
-      },
-      {
-        "file": "assets/GoldBlock.svg",
-        "kind": "image",
-        "metadata": "",
-        "name": "assets\\GoldBlock.svg",
         "smoothed": true,
         "userAdded": true
       }
@@ -1112,7 +1080,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "CoalBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000101",
           "width": 88,
           "x": 520,
@@ -1150,7 +1118,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "IronBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000103",
           "width": 88,
           "x": 650,
@@ -1169,7 +1137,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "CoalBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000104",
           "width": 88,
           "x": 850,
@@ -1188,7 +1156,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "GoldBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000105",
           "width": 88,
           "x": 500,
@@ -1226,7 +1194,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "CoalBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000107",
           "width": 88,
           "x": 610,
@@ -1245,7 +1213,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "IronBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000108",
           "width": 88,
           "x": 860,
@@ -1283,7 +1251,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "GoldBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000110",
           "width": 88,
           "x": 740,
@@ -1302,7 +1270,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "IronBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000111",
           "width": 88,
           "x": 600,
@@ -1321,7 +1289,7 @@
           "keepRatio": true,
           "layer": "",
           "locked": false,
-          "name": "CoalBlock",
+          "name": "MineBlock",
           "persistentUuid": "33000000-0000-4000-8000-000000000112",
           "width": 88,
           "x": 850,
@@ -1983,7 +1951,7 @@
               "name": "Health",
               "persistentUuid": "32000000-0000-4000-8000-000000000002",
               "type": "number",
-              "value": 2
+              "value": 3
             }
           ],
           "effects": [],
@@ -2023,235 +1991,13 @@
             "depth": 88,
             "enableTextureTransparency": false,
             "facesOrientation": "Y",
-            "frontFaceResourceName": "assets\\StoneBlock.svg",
-            "backFaceResourceName": "assets\\StoneBlock.svg",
+            "frontFaceResourceName": "assets\\Ore.png",
+            "backFaceResourceName": "assets\\Ore.png",
             "backFaceUpThroughWhichAxisRotation": "X",
-            "leftFaceResourceName": "assets\\StoneBlock.svg",
-            "rightFaceResourceName": "assets\\StoneBlock.svg",
-            "topFaceResourceName": "assets\\StoneBlock.svg",
-            "bottomFaceResourceName": "assets\\StoneBlock.svg",
-            "frontFaceVisible": true,
-            "backFaceVisible": true,
-            "leftFaceVisible": true,
-            "rightFaceVisible": true,
-            "topFaceVisible": true,
-            "bottomFaceVisible": true,
-            "frontFaceResourceRepeat": true,
-            "backFaceResourceRepeat": true,
-            "leftFaceResourceRepeat": true,
-            "rightFaceResourceRepeat": true,
-            "topFaceResourceRepeat": true,
-            "bottomFaceResourceRepeat": true,
-            "materialType": "StandardWithoutMetalness",
-            "isCastingShadow": true,
-            "isReceivingShadow": true
-          }
-        },
-        {
-          "assetStoreId": "",
-          "name": "GoldBlock",
-          "persistentUuid": "7e67c710-11b2-4c01-9a8f-303030303001",
-          "type": "Scene3D::Cube3DObject",
-          "variables": [
-            {
-              "name": "Health",
-              "persistentUuid": "7e67c710-11b2-4c01-9a8f-303030303002",
-              "type": "number",
-              "value": 5
-            }
-          ],
-          "effects": [],
-          "behaviors": [
-            {
-              "name": "Physics3D",
-              "type": "Physics3D::Physics3DBehavior",
-              "object3D": "Object3D",
-              "bodyType": "Static",
-              "bullet": false,
-              "fixedRotation": false,
-              "shape": "Box",
-              "shapeOrientation": "Z",
-              "shapeDimensionA": 0,
-              "shapeDimensionB": 0,
-              "shapeDimensionC": 0,
-              "density": 1,
-              "friction": 0.3,
-              "restitution": 0.1,
-              "linearDamping": 0.1,
-              "angularDamping": 0.1,
-              "gravityScale": 1,
-              "layers": 17,
-              "masks": 17,
-              "shapeOffsetX": 0,
-              "shapeOffsetY": 0,
-              "shapeOffsetZ": 0,
-              "massCenterOffsetX": 0,
-              "massCenterOffsetY": 0,
-              "massCenterOffsetZ": 0,
-              "massOverride": 0
-            }
-          ],
-          "content": {
-            "width": 88,
-            "height": 88,
-            "depth": 88,
-            "enableTextureTransparency": false,
-            "facesOrientation": "Y",
-            "frontFaceResourceName": "assets\\GoldBlock.svg",
-            "backFaceResourceName": "assets\\GoldBlock.svg",
-            "backFaceUpThroughWhichAxisRotation": "X",
-            "leftFaceResourceName": "assets\\GoldBlock.svg",
-            "rightFaceResourceName": "assets\\GoldBlock.svg",
-            "topFaceResourceName": "assets\\GoldBlock.svg",
-            "bottomFaceResourceName": "assets\\GoldBlock.svg",
-            "frontFaceVisible": true,
-            "backFaceVisible": true,
-            "leftFaceVisible": true,
-            "rightFaceVisible": true,
-            "topFaceVisible": true,
-            "bottomFaceVisible": true,
-            "frontFaceResourceRepeat": true,
-            "backFaceResourceRepeat": true,
-            "leftFaceResourceRepeat": true,
-            "rightFaceResourceRepeat": true,
-            "topFaceResourceRepeat": true,
-            "bottomFaceResourceRepeat": true,
-            "materialType": "StandardWithoutMetalness",
-            "isCastingShadow": true,
-            "isReceivingShadow": true
-          }
-        },
-        {
-          "assetStoreId": "",
-          "name": "IronBlock",
-          "persistentUuid": "7e67c710-11b2-4c01-9a8f-202020202001",
-          "type": "Scene3D::Cube3DObject",
-          "variables": [
-            {
-              "name": "Health",
-              "persistentUuid": "7e67c710-11b2-4c01-9a8f-202020202002",
-              "type": "number",
-              "value": 4
-            }
-          ],
-          "effects": [],
-          "behaviors": [
-            {
-              "name": "Physics3D",
-              "type": "Physics3D::Physics3DBehavior",
-              "object3D": "Object3D",
-              "bodyType": "Static",
-              "bullet": false,
-              "fixedRotation": false,
-              "shape": "Box",
-              "shapeOrientation": "Z",
-              "shapeDimensionA": 0,
-              "shapeDimensionB": 0,
-              "shapeDimensionC": 0,
-              "density": 1,
-              "friction": 0.3,
-              "restitution": 0.1,
-              "linearDamping": 0.1,
-              "angularDamping": 0.1,
-              "gravityScale": 1,
-              "layers": 17,
-              "masks": 17,
-              "shapeOffsetX": 0,
-              "shapeOffsetY": 0,
-              "shapeOffsetZ": 0,
-              "massCenterOffsetX": 0,
-              "massCenterOffsetY": 0,
-              "massCenterOffsetZ": 0,
-              "massOverride": 0
-            }
-          ],
-          "content": {
-            "width": 88,
-            "height": 88,
-            "depth": 88,
-            "enableTextureTransparency": false,
-            "facesOrientation": "Y",
-            "frontFaceResourceName": "assets\\IronBlock.svg",
-            "backFaceResourceName": "assets\\IronBlock.svg",
-            "backFaceUpThroughWhichAxisRotation": "X",
-            "leftFaceResourceName": "assets\\IronBlock.svg",
-            "rightFaceResourceName": "assets\\IronBlock.svg",
-            "topFaceResourceName": "assets\\IronBlock.svg",
-            "bottomFaceResourceName": "assets\\IronBlock.svg",
-            "frontFaceVisible": true,
-            "backFaceVisible": true,
-            "leftFaceVisible": true,
-            "rightFaceVisible": true,
-            "topFaceVisible": true,
-            "bottomFaceVisible": true,
-            "frontFaceResourceRepeat": true,
-            "backFaceResourceRepeat": true,
-            "leftFaceResourceRepeat": true,
-            "rightFaceResourceRepeat": true,
-            "topFaceResourceRepeat": true,
-            "bottomFaceResourceRepeat": true,
-            "materialType": "StandardWithoutMetalness",
-            "isCastingShadow": true,
-            "isReceivingShadow": true
-          }
-        },
-        {
-          "assetStoreId": "",
-          "name": "CoalBlock",
-          "persistentUuid": "7e67c710-11b2-4c01-9a8f-101010101001",
-          "type": "Scene3D::Cube3DObject",
-          "variables": [
-            {
-              "name": "Health",
-              "persistentUuid": "7e67c710-11b2-4c01-9a8f-101010101002",
-              "type": "number",
-              "value": 2
-            }
-          ],
-          "effects": [],
-          "behaviors": [
-            {
-              "name": "Physics3D",
-              "type": "Physics3D::Physics3DBehavior",
-              "object3D": "Object3D",
-              "bodyType": "Static",
-              "bullet": false,
-              "fixedRotation": false,
-              "shape": "Box",
-              "shapeOrientation": "Z",
-              "shapeDimensionA": 0,
-              "shapeDimensionB": 0,
-              "shapeDimensionC": 0,
-              "density": 1,
-              "friction": 0.3,
-              "restitution": 0.1,
-              "linearDamping": 0.1,
-              "angularDamping": 0.1,
-              "gravityScale": 1,
-              "layers": 17,
-              "masks": 17,
-              "shapeOffsetX": 0,
-              "shapeOffsetY": 0,
-              "shapeOffsetZ": 0,
-              "massCenterOffsetX": 0,
-              "massCenterOffsetY": 0,
-              "massCenterOffsetZ": 0,
-              "massOverride": 0
-            }
-          ],
-          "content": {
-            "width": 88,
-            "height": 88,
-            "depth": 88,
-            "enableTextureTransparency": false,
-            "facesOrientation": "Y",
-            "frontFaceResourceName": "assets\\CoalBlock.svg",
-            "backFaceResourceName": "assets\\CoalBlock.svg",
-            "backFaceUpThroughWhichAxisRotation": "X",
-            "leftFaceResourceName": "assets\\CoalBlock.svg",
-            "rightFaceResourceName": "assets\\CoalBlock.svg",
-            "topFaceResourceName": "assets\\CoalBlock.svg",
-            "bottomFaceResourceName": "assets\\CoalBlock.svg",
+            "leftFaceResourceName": "assets\\Ore.png",
+            "rightFaceResourceName": "assets\\Ore.png",
+            "topFaceResourceName": "assets\\Ore.png",
+            "bottomFaceResourceName": "assets\\Ore.png",
             "frontFaceVisible": true,
             "backFaceVisible": true,
             "leftFaceVisible": true,
@@ -2380,7 +2126,7 @@
           "variables": [],
           "effects": [],
           "behaviors": [],
-          "string": "РЮКЗАК: 0/20",
+          "string": "РУДА: 0/20",
           "font": "",
           "characterSize": 28,
           "color": {
@@ -2420,7 +2166,7 @@
           "variables": [],
           "effects": [],
           "behaviors": [],
-          "string": "КАМЕНЬ • УГОЛЬ • ЖЕЛЕЗО • ЗОЛОТО",
+          "string": "Подойди к рудному блоку и нажми КИРКА • 3 удара",
           "font": "",
           "characterSize": 18,
           "color": {
@@ -2666,8 +2412,8 @@
                       },
                       "parameters": [
                         "OreMined",
-                        "=",
-                        "min(Variable(BagCapacity), Variable(OreMined)+1)"
+                        "+",
+                        "1"
                       ]
                     },
                     {
@@ -2697,309 +2443,6 @@
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsJustPressed"
-                  },
-                  "parameters": [
-                    "PickaxeButton",
-                    "MultitouchButton"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "Collision3D::AreWithinDistance"
-                  },
-                  "parameters": [
-                    "",
-                    "CoalBlock",
-                    "Player",
-                    "155",
-                    "",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "NumberVariable"
-                  },
-                  "parameters": [
-                    "OreMined",
-                    "<",
-                    "Variable(BagCapacity)"
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetNumberObjectVariable"
-                  },
-                  "parameters": [
-                    "CoalBlock",
-                    "Health",
-                    "-",
-                    "1"
-                  ]
-                }
-              ],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "NumberObjectVariable"
-                      },
-                      "parameters": [
-                        "CoalBlock",
-                        "Health",
-                        "<=",
-                        "0"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "OreMined",
-                        "=",
-                        "min(Variable(BagCapacity), Variable(OreMined)+1)"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "PlaySound"
-                      },
-                      "parameters": [
-                        "",
-                        "assets/CoinPickUp.wav",
-                        "",
-                        "75",
-                        "1"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "Delete"
-                      },
-                      "parameters": [
-                        "CoalBlock",
-                        ""
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsJustPressed"
-                  },
-                  "parameters": [
-                    "PickaxeButton",
-                    "MultitouchButton"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "Collision3D::AreWithinDistance"
-                  },
-                  "parameters": [
-                    "",
-                    "IronBlock",
-                    "Player",
-                    "155",
-                    "",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "NumberVariable"
-                  },
-                  "parameters": [
-                    "OreMined",
-                    "<",
-                    "Variable(BagCapacity)"
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetNumberObjectVariable"
-                  },
-                  "parameters": [
-                    "IronBlock",
-                    "Health",
-                    "-",
-                    "1"
-                  ]
-                }
-              ],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "NumberObjectVariable"
-                      },
-                      "parameters": [
-                        "IronBlock",
-                        "Health",
-                        "<=",
-                        "0"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "OreMined",
-                        "=",
-                        "min(Variable(BagCapacity), Variable(OreMined)+2)"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "PlaySound"
-                      },
-                      "parameters": [
-                        "",
-                        "assets/CoinPickUp.wav",
-                        "",
-                        "75",
-                        "1"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "Delete"
-                      },
-                      "parameters": [
-                        "IronBlock",
-                        ""
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsJustPressed"
-                  },
-                  "parameters": [
-                    "PickaxeButton",
-                    "MultitouchButton"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "Collision3D::AreWithinDistance"
-                  },
-                  "parameters": [
-                    "",
-                    "GoldBlock",
-                    "Player",
-                    "155",
-                    "",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "NumberVariable"
-                  },
-                  "parameters": [
-                    "OreMined",
-                    "<",
-                    "Variable(BagCapacity)"
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetNumberObjectVariable"
-                  },
-                  "parameters": [
-                    "GoldBlock",
-                    "Health",
-                    "-",
-                    "1"
-                  ]
-                }
-              ],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "NumberObjectVariable"
-                      },
-                      "parameters": [
-                        "GoldBlock",
-                        "Health",
-                        "<=",
-                        "0"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "OreMined",
-                        "=",
-                        "min(Variable(BagCapacity), Variable(OreMined)+3)"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "PlaySound"
-                      },
-                      "parameters": [
-                        "",
-                        "assets/CoinPickUp.wav",
-                        "",
-                        "75",
-                        "1"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "Delete"
-                      },
-                      "parameters": [
-                        "GoldBlock",
-                        ""
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
                 {
@@ -3009,7 +2452,7 @@
                   "parameters": [
                     "OreHUD",
                     "=",
-                    "\"РЮКЗАК: \"+ToString(Variable(OreMined))+\"/\"+ToString(Variable(BagCapacity))"
+                    "\"РУДА: \"+ToString(Variable(OreMined))+\"/\"+ToString(Variable(BagCapacity))"
                   ]
                 }
               ]
