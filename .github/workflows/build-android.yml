@@ -1,0 +1,633 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Create Godot test project
+        shell: bash
+        run: |
+          mkdir -p game build
+
+          cat > game/project.godot <<'EOF'
+          ; Engine configuration file.
+          config_version=5
+
+          [application]
+          config/name="Miner Deeper"
+          config/description="Android test build of Miner Deeper"
+          config/version="0.5-test"
+          run/main_scene="res://Main.tscn"
+
+          [display]
+          window/size/viewport_width=720
+          window/size/viewport_height=1280
+          window/size/window_width_override=720
+          window/size/window_height_override=1280
+          window/stretch/mode="canvas_items"
+          window/handheld/orientation=1
+
+          [rendering]
+          renderer/rendering_method="gl_compatibility"
+          renderer/rendering_method.mobile="gl_compatibility"
+          EOF
+
+          cat > game/Main.tscn <<'EOF'
+          [gd_scene load_steps=2 format=3]
+
+          [ext_resource path="res://main.gd" type="Script" id="1"]
+
+          [node name="Main" type="Node2D"]
+          script = ExtResource("1")
+          EOF
+
+          cat > game/export_presets.cfg <<'EOF'
+          [preset.0]
+
+          name="Android"
+          platform="Android"
+          runnable=true
+          advanced_options=false
+          dedicated_server=false
+          custom_features=""
+          export_filter="all_resources"
+          include_filter=""
+          exclude_filter=""
+          export_path="../build/miner-deeper-v0.5-test.apk"
+          encryption_include_filters=""
+          encryption_exclude_filters=""
+          encrypt_pck=false
+          encrypt_directory=false
+          script_export_mode=2
+
+          [preset.0.options]
+
+          custom_template/debug=""
+          custom_template/release=""
+          gradle_build/use_gradle_build=false
+          gradle_build/export_format=0
+          gradle_build/min_sdk=""
+          gradle_build/target_sdk=""
+          architectures/armeabi-v7a=false
+          architectures/arm64-v8a=true
+          architectures/x86=false
+          architectures/x86_64=false
+          version/code=5
+          version/name="0.5-test"
+          package/unique_name="com.geodenix.minerdeeper"
+          package/name="Miner Deeper"
+          package/signed=true
+          package/app_category=0
+          package/retain_data_on_uninstall=false
+          package/exclude_from_recents=false
+          screen/immersive_mode=true
+          screen/support_small=true
+          screen/support_normal=true
+          screen/support_large=true
+          screen/support_xlarge=true
+          user_data_backup/allow=true
+          command_line/extra_args=""
+          EOF
+
+          cat > game/main.gd <<'GDSCRIPT'
+          extends Node2D
+
+          const W := 720.0
+          const H := 1280.0
+          const TILE := 52.0
+          const COLS := 12
+          const ROWS := 100
+          const GRID_X := 48.0
+          const CENTER_Y := 490.0
+          const SURFACE := 1
+          const SAVE_PATH := "user://save.json"
+
+          var rng := RandomNumberGenerator.new()
+          var world: Array = []
+          var player := Vector2i(5, SURFACE)
+          var coins := 0
+          var pick_level := 1
+          var bag_level := 1
+          var tnt := 2
+          var hp := 100
+          var max_depth := 0
+          var inventory := {"coal":0, "iron":0, "gold":0, "diamond":0}
+          var screen := "menu"
+          var message := ""
+          var message_time := 0.0
+
+          var left_r := Rect2(35,1060,120,120)
+          var right_r := Rect2(295,1060,120,120)
+          var up_r := Rect2(165,925,120,120)
+          var down_r := Rect2(165,1060,120,120)
+          var shop_r := Rect2(455,930,220,72)
+          var tnt_r := Rect2(455,1020,220,72)
+          var mine_r := Rect2(455,1110,220,72)
+          var menu_r := Rect2(455,1200,220,55)
+
+          var start_r := Rect2(140,540,440,90)
+          var continue_r := Rect2(140,650,440,90)
+
+          var pick_r := Rect2(90,370,540,100)
+          var bag_r := Rect2(90,500,540,100)
+          var buy_tnt_r := Rect2(90,630,540,100)
+          var back_r := Rect2(90,850,540,85)
+
+          func _ready() -> void:
+              rng.randomize()
+              load_save()
+              create_mine()
+              queue_redraw()
+
+          func _process(delta: float) -> void:
+              if message_time > 0.0:
+                  message_time -= delta
+                  queue_redraw()
+
+          func bag_capacity() -> int:
+              return 15 + (bag_level - 1) * 10
+
+          func bag_used() -> int:
+              var n := 0
+              for k in inventory.keys():
+                  n += int(inventory[k])
+              return n
+
+          func pick_damage() -> int:
+              return pick_level
+
+          func pick_price() -> int:
+              return 80 * pick_level * pick_level
+
+          func bag_price() -> int:
+              return 60 * bag_level * bag_level
+
+          func create_mine() -> void:
+              world.clear()
+              for y in range(ROWS):
+                  var row: Array = []
+                  for x in range(COLS):
+                      if y <= SURFACE:
+                          row.append(0)
+                      else:
+                          row.append(random_block(y))
+                  world.append(row)
+
+              for y in range(2, 7):
+                  world[y][5] = 0
+
+              player = Vector2i(5, SURFACE)
+              hp = 100
+              message = "New mine created"
+              message_time = 2.0
+
+          func random_block(depth: int) -> int:
+              var r := rng.randf()
+              if depth > 55 and r < 0.035:
+                  return 6
+              if depth > 35 and r < 0.10:
+                  return 5
+              if depth > 22 and r < 0.18:
+                  return 4
+              if depth > 10 and r < 0.28:
+                  return 3
+              if r < 0.40:
+                  return 2
+              return 1
+
+          func _unhandled_input(event: InputEvent) -> void:
+              if event is InputEventScreenTouch and event.pressed:
+                  touch(event.position)
+              elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+                  touch(event.position)
+              elif event is InputEventKey and event.pressed and not event.echo and screen == "play":
+                  match event.keycode:
+                      KEY_A, KEY_LEFT:
+                          act(Vector2i.LEFT)
+                      KEY_D, KEY_RIGHT:
+                          act(Vector2i.RIGHT)
+                      KEY_W, KEY_UP:
+                          act(Vector2i.UP)
+                      KEY_S, KEY_DOWN:
+                          act(Vector2i.DOWN)
+                      KEY_SPACE:
+                          blast()
+
+          func touch(pos: Vector2) -> void:
+              if screen == "menu":
+                  if start_r.has_point(pos):
+                      create_mine()
+                      screen = "play"
+                  elif continue_r.has_point(pos):
+                      screen = "play"
+                  queue_redraw()
+                  return
+
+              if screen == "shop":
+                  if pick_r.has_point(pos):
+                      upgrade_pick()
+                  elif bag_r.has_point(pos):
+                      upgrade_bag()
+                  elif buy_tnt_r.has_point(pos):
+                      buy_tnt()
+                  elif back_r.has_point(pos):
+                      screen = "play"
+                  queue_redraw()
+                  return
+
+              if left_r.has_point(pos):
+                  act(Vector2i.LEFT)
+              elif right_r.has_point(pos):
+                  act(Vector2i.RIGHT)
+              elif up_r.has_point(pos):
+                  act(Vector2i.UP)
+              elif down_r.has_point(pos):
+                  act(Vector2i.DOWN)
+              elif shop_r.has_point(pos) and player.y <= SURFACE:
+                  screen = "shop"
+              elif tnt_r.has_point(pos):
+                  if player.y <= SURFACE:
+                      buy_tnt()
+                  else:
+                      blast()
+              elif mine_r.has_point(pos) and player.y <= SURFACE:
+                  create_mine()
+              elif menu_r.has_point(pos):
+                  save_game()
+                  screen = "menu"
+              queue_redraw()
+
+          func act(dir: Vector2i) -> void:
+              if screen != "play":
+                  return
+              var target := player + dir
+              if target.x < 0 or target.x >= COLS or target.y < 0 or target.y >= ROWS:
+                  return
+
+              var b := int(world[target.y][target.x])
+              if b == 0:
+                  player = target
+                  after_move()
+                  return
+
+              if b == 6:
+                  world[target.y][target.x] = 0
+                  hp -= 15
+                  player = target
+                  say("Lava! -15 HP")
+                  if hp <= 0:
+                      death()
+                  after_move()
+                  return
+
+              if is_ore(b) and bag_used() >= bag_capacity():
+                  say("Backpack is full")
+                  return
+
+              var need := block_hp(b)
+              if pick_damage() >= need:
+                  world[target.y][target.x] = 0
+                  collect_block(b)
+                  player = target
+                  after_move()
+              else:
+                  pick_level += 0
+                  say("Need stronger pickaxe")
+
+          func after_move() -> void:
+              if player.y > max_depth:
+                  max_depth = player.y
+              if player.y <= SURFACE:
+                  sell_all()
+                  hp = 100
+              if player.y > 12 and rng.randf() < 0.035:
+                  hp -= 8
+                  say("Cave creature attacks: -8 HP")
+                  if hp <= 0:
+                      death()
+              save_game()
+              queue_redraw()
+
+          func death() -> void:
+              var lost := int(coins * 0.10)
+              coins -= lost
+              for k in inventory.keys():
+                  inventory[k] = 0
+              hp = 100
+              player = Vector2i(5, SURFACE)
+              say("Rescued. Lost " + str(lost) + " coins")
+
+          func is_ore(b: int) -> bool:
+              return b in [2,3,4,5]
+
+          func block_hp(b: int) -> int:
+              match b:
+                  1:
+                      return 1
+                  2:
+                      return 1
+                  3:
+                      return 2
+                  4:
+                      return 3
+                  5:
+                      return 4
+                  _:
+                      return 1
+
+          func collect_block(b: int) -> void:
+              match b:
+                  2:
+                      inventory["coal"] += 1
+                      say("+1 coal")
+                  3:
+                      inventory["iron"] += 1
+                      say("+1 iron")
+                  4:
+                      inventory["gold"] += 1
+                      say("+1 gold")
+                  5:
+                      inventory["diamond"] += 1
+                      say("+1 diamond")
+                  _:
+                      say("Block broken")
+
+          func sell_all() -> void:
+              var earned := int(inventory["coal"]) * 4
+              earned += int(inventory["iron"]) * 10
+              earned += int(inventory["gold"]) * 28
+              earned += int(inventory["diamond"]) * 85
+              if earned > 0:
+                  coins += earned
+                  for k in inventory.keys():
+                      inventory[k] = 0
+                  say("Sold ore: +" + str(earned))
+
+          func upgrade_pick() -> void:
+              var price := pick_price()
+              if coins >= price:
+                  coins -= price
+                  pick_level += 1
+                  say("Pickaxe level " + str(pick_level))
+                  save_game()
+              else:
+                  say("Need " + str(price) + " coins")
+
+          func upgrade_bag() -> void:
+              var price := bag_price()
+              if coins >= price:
+                  coins -= price
+                  bag_level += 1
+                  say("Backpack: " + str(bag_capacity()))
+                  save_game()
+              else:
+                  say("Need " + str(price) + " coins")
+
+          func buy_tnt() -> void:
+              if coins >= 30:
+                  coins -= 30
+                  tnt += 1
+                  say("TNT purchased")
+                  save_game()
+              else:
+                  say("Need 30 coins")
+
+          func blast() -> void:
+              if player.y <= SURFACE:
+                  return
+              if tnt <= 0:
+                  say("No TNT")
+                  return
+              tnt -= 1
+              for oy in range(-1,2):
+                  for ox in range(-1,2):
+                      var p := player + Vector2i(ox,oy)
+                      if p.x < 0 or p.x >= COLS or p.y <= SURFACE or p.y >= ROWS:
+                          continue
+                      var b := int(world[p.y][p.x])
+                      if is_ore(b) and bag_used() < bag_capacity():
+                          collect_block(b)
+                      world[p.y][p.x] = 0
+              say("BOOM!")
+              save_game()
+              queue_redraw()
+
+          func say(text: String) -> void:
+              message = text
+              message_time = 2.2
+
+          func save_game() -> void:
+              var data := {
+                  "coins":coins,
+                  "pick_level":pick_level,
+                  "bag_level":bag_level,
+                  "tnt":tnt,
+                  "max_depth":max_depth
+              }
+              var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+              if f:
+                  f.store_string(JSON.stringify(data))
+
+          func load_save() -> void:
+              if not FileAccess.file_exists(SAVE_PATH):
+                  return
+              var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+              if not f:
+                  return
+              var data = JSON.parse_string(f.get_as_text())
+              if typeof(data) == TYPE_DICTIONARY:
+                  coins = int(data.get("coins",0))
+                  pick_level = int(data.get("pick_level",1))
+                  bag_level = int(data.get("bag_level",1))
+                  tnt = int(data.get("tnt",2))
+                  max_depth = int(data.get("max_depth",0))
+
+          func camera_y() -> float:
+              return CENTER_Y - float(player.y) * TILE
+
+          func tile_pos(x: int, y: int) -> Vector2:
+              return Vector2(GRID_X + x*TILE, camera_y() + y*TILE)
+
+          func block_color(b: int) -> Color:
+              match b:
+                  1:
+                      return Color("#70482b")
+                  2:
+                      return Color("#282b2e")
+                  3:
+                      return Color("#a66b48")
+                  4:
+                      return Color("#d9aa2b")
+                  5:
+                      return Color("#2ed9e8")
+                  6:
+                      return Color("#dc3b22")
+                  _:
+                      return Color("#171b20")
+
+          func _draw() -> void:
+              if screen == "menu":
+                  draw_menu()
+              elif screen == "shop":
+                  draw_shop()
+              else:
+                  draw_game()
+
+          func draw_menu() -> void:
+              draw_rect(Rect2(0,0,W,H),Color("#10151c"))
+              draw_rect(Rect2(0,850,W,430),Color("#573820"))
+              draw_string(ThemeDB.fallback_font,Vector2(0,250),"MINER",HORIZONTAL_ALIGNMENT_CENTER,W,62,Color("#f4c43f"))
+              draw_string(ThemeDB.fallback_font,Vector2(0,315),"DEEPER",HORIZONTAL_ALIGNMENT_CENTER,W,58,Color.WHITE)
+              draw_string(ThemeDB.fallback_font,Vector2(0,365),"Android test v0.5",HORIZONTAL_ALIGNMENT_CENTER,W,22,Color("#b9c3cc"))
+              menu_button(start_r,"NEW GAME")
+              menu_button(continue_r,"CONTINUE")
+              draw_string(ThemeDB.fallback_font,Vector2(0,820),"Best depth: "+str(max(0,max_depth-SURFACE))+" m",HORIZONTAL_ALIGNMENT_CENTER,W,22,Color.WHITE)
+              draw_miner(Vector2(360,1020),2.0)
+
+          func draw_game() -> void:
+              draw_rect(Rect2(0,0,W,H),Color("#10151c"))
+              var min_y := max(0,player.y-9)
+              var max_y := min(ROWS-1,player.y+10)
+
+              for y in range(min_y,max_y+1):
+                  for x in range(COLS):
+                      var p := tile_pos(x,y)
+                      var r := Rect2(p,Vector2(TILE-1,TILE-1))
+                      if y <= SURFACE:
+                          draw_rect(r,Color("#86c8ff"))
+                      else:
+                          var b := int(world[y][x])
+                          draw_rect(r,block_color(b))
+                          if b in [2,3,4,5]:
+                              draw_circle(p+Vector2(TILE/2,TILE/2),8,block_color(b).lightened(0.35))
+                          if b == 6:
+                              draw_rect(Rect2(p+Vector2(0,8),Vector2(TILE-1,8)),Color("#ff8a26"))
+
+              var pp := tile_pos(player.x,player.y)+Vector2(TILE/2,TILE/2)
+              draw_miner(pp,0.55)
+
+              draw_rect(Rect2(0,0,W,160),Color(0.04,0.05,0.07,0.96))
+              draw_string(ThemeDB.fallback_font,Vector2(18,32),"MINER DEEPER v0.5 TEST",HORIZONTAL_ALIGNMENT_LEFT,-1,23,Color("#f5d36b"))
+              draw_string(ThemeDB.fallback_font,Vector2(18,70),"Coins: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
+              draw_string(ThemeDB.fallback_font,Vector2(210,70),"Bag: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
+              draw_string(ThemeDB.fallback_font,Vector2(435,70),"Depth: "+str(max(0,player.y-SURFACE))+" m",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
+              draw_string(ThemeDB.fallback_font,Vector2(18,108),"Pickaxe Lv."+str(pick_level)+"  TNT "+str(tnt),HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("#c5d0da"))
+              draw_string(ThemeDB.fallback_font,Vector2(450,108),"HP "+str(hp)+"/100",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
+              draw_rect(Rect2(450,120,220,16),Color("#3b2023"))
+              draw_rect(Rect2(450,120,220*float(hp)/100.0,16),Color("#52b66f"))
+
+              if message_time > 0.0:
+                  draw_rect(Rect2(55,175,610,50),Color(0,0,0,0.74))
+                  draw_string(ThemeDB.fallback_font,Vector2(70,207),message,HORIZONTAL_ALIGNMENT_CENTER,580,18,Color.WHITE)
+
+              draw_rect(Rect2(0,885,W,395),Color(0.04,0.05,0.07,0.96))
+              small_button(left_r,"<",true)
+              small_button(right_r,">",true)
+              small_button(up_r,"UP",true)
+              small_button(down_r,"DOWN",true)
+
+              var surface_only := player.y <= SURFACE
+              small_button(shop_r,"SHOP",surface_only)
+              small_button(tnt_r,("BUY TNT 30" if surface_only else "TNT x"+str(tnt)),true)
+              small_button(mine_r,"NEW MINE",surface_only)
+              small_button(menu_r,"MENU",true)
+
+          func draw_shop() -> void:
+              draw_rect(Rect2(0,0,W,H),Color("#111820"))
+              draw_string(ThemeDB.fallback_font,Vector2(0,120),"SHOP",HORIZONTAL_ALIGNMENT_CENTER,W,46,Color("#f2c74d"))
+              draw_string(ThemeDB.fallback_font,Vector2(0,175),"Coins: "+str(coins),HORIZONTAL_ALIGNMENT_CENTER,W,24,Color.WHITE)
+              shop_card(pick_r,"Pickaxe Lv."+str(pick_level),"Break tougher ore",pick_price())
+              shop_card(bag_r,"Backpack "+str(bag_capacity()),"Carry more ore",bag_price())
+              shop_card(buy_tnt_r,"TNT x"+str(tnt),"Blast a 3x3 area",30)
+              menu_button(back_r,"BACK")
+
+              if message_time > 0.0:
+                  draw_string(ThemeDB.fallback_font,Vector2(70,1010),message,HORIZONTAL_ALIGNMENT_CENTER,580,18,Color.WHITE)
+
+          func draw_miner(p: Vector2, scale: float) -> void:
+              draw_circle(p+Vector2(0,-10*scale),18*scale,Color("#dfad6a"))
+              draw_rect(Rect2(p+Vector2(-20*scale,-30*scale),Vector2(40*scale,9*scale)),Color("#e2ad29"))
+              draw_rect(Rect2(p+Vector2(-14*scale,8*scale),Vector2(28*scale,28*scale)),Color("#386b94"))
+              draw_line(p+Vector2(10*scale,8*scale),p+Vector2(31*scale,-14*scale),Color("#9c6b3f"),4*scale)
+              draw_line(p+Vector2(25*scale,-20*scale),p+Vector2(38*scale,-7*scale),Color("#cbd2d8"),5*scale)
+
+          func menu_button(r: Rect2, label: String) -> void:
+              draw_rect(r,Color("#2d465c"))
+              draw_rect(r.grow(-4),Color("#52708b"),false,3)
+              draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y/2+9),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,22,Color.WHITE)
+
+          func small_button(r: Rect2, label: String, enabled: bool) -> void:
+              var c := Color("#315f43") if enabled else Color("#34383d")
+              draw_rect(r,c)
+              draw_rect(r.grow(-3),c.lightened(0.15),false,2)
+              draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y/2+7),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,16,Color.WHITE)
+
+          func shop_card(r: Rect2, title: String, desc: String, price: int) -> void:
+              draw_rect(r,Color("#253240"))
+              draw_rect(r.grow(-3),Color("#405164"),false,2)
+              draw_string(ThemeDB.fallback_font,r.position+Vector2(18,34),title,HORIZONTAL_ALIGNMENT_LEFT,330,21,Color.WHITE)
+              draw_string(ThemeDB.fallback_font,r.position+Vector2(18,66),desc,HORIZONTAL_ALIGNMENT_LEFT,330,16,Color("#c5ced6"))
+              draw_string(ThemeDB.fallback_font,r.position+Vector2(390,58),str(price)+" coins",HORIZONTAL_ALIGNMENT_CENTER,130,18,Color("#f2c74d"))
+          GDSCRIPT
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "build-tools;35.0.1" "platforms;android-35" "cmdline-tools;latest" "cmake;3.10.2.4988404" "ndk;28.1.13356709"
+
+      - name: Create debug keystore
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          keytool -genkeypair -v             -keystore "$HOME/.android/debug.keystore"             -storepass android             -alias androiddebugkey             -keypass android             -dname "CN=Android Debug,O=Android,C=US"             -keyalg RSA -keysize 2048 -validity 10000
+
+      - name: Export Godot project
+        id: export
+        uses: firebelley/godot-export@v8.0.0
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        with:
+          godot_executable_download_url: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          godot_export_templates_download_url: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          relative_project_path: ./game
+          presets_to_export: Android
+          export_debug: true
+          cache: true
+          verbose: true
+
+      - name: Show exported files
+        shell: bash
+        run: |
+          echo "Build directory: ${{ steps.export.outputs.build_directory }}"
+          find "${{ steps.export.outputs.build_directory }}" -maxdepth 3 -type f -print || true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: miner-deeper-v0.5-test-apk
+          path: ${{ steps.export.outputs.build_directory }}/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
