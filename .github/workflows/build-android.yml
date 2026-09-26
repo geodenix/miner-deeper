@@ -41,6 +41,7 @@ jobs:
           [rendering]
           renderer/rendering_method="gl_compatibility"
           renderer/rendering_method.mobile="gl_compatibility"
+          rendering/textures/vram_compression/import_etc2_astc=true
           EOF
 
           cat > game/Main.tscn <<'EOF'
@@ -497,8 +498,8 @@ jobs:
 
           func draw_game() -> void:
               draw_rect(Rect2(0,0,W,H),Color("#10151c"))
-              var min_y := max(0,player.y-9)
-              var max_y := min(ROWS-1,player.y+10)
+              var min_y: int = maxi(0, player.y - 9)
+              var max_y: int = mini(ROWS - 1, player.y + 10)
 
               for y in range(min_y,max_y+1):
                   for x in range(COLS):
