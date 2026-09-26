@@ -4,7 +4,7 @@ config_version=5
 [application]
 config/name="Шахтёр: Глубже!"
 config/description="Мобильная 2D-игра про шахтёра"
-config/version="0.8"
+config/version="0.8.1"
 run/main_scene="res://Main.tscn"
 
 [display]
@@ -21,3 +21,6 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 textures/default_filters/use_nearest_mipmap_filter=false
+
+[input_devices]
+pointing/emulate_mouse_from_touch=false
