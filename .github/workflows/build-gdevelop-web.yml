@@ -1,0 +1,89 @@
+name: Build GDevelop 3D Web
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'gdevelop3d/**'
+      - '.github/workflows/build-gdevelop-web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install GDevelop runtime dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libnss3 libasound2t64 libgtk-3-0 libgbm1 libxss1 unzip curl
+
+      - name: Download GDevelop 5.6.282
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 \
+            -o /tmp/gdevelop-linux.zip \
+            https://github.com/4ian/GDevelop/releases/download/v5.6.282/GDevelop-5-5.6.282-linux.zip
+          mkdir -p /tmp/gdevelop
+          unzip -q /tmp/gdevelop-linux.zip -d /tmp/gdevelop
+          find /tmp/gdevelop -maxdepth 3 -type f | head -80
+
+      - name: Export project to HTML5
+        shell: bash
+        run: |
+          GD_BIN="$(find /tmp/gdevelop -type f \( -name gdevelop -o -name GDevelop \) | head -n 1)"
+          if [ -z "$GD_BIN" ]; then
+            echo "GDevelop executable not found"
+            exit 1
+          fi
+          chmod +x "$GD_BIN"
+          rm -rf gdevelop3d/build
+          xvfb-run -a "$GD_BIN" \
+            --no-sandbox \
+            --disable-update-check \
+            --block-on-diagnostic-errors \
+            --run-command EXPORT_HTML5_EXTERNAL \
+            "$GITHUB_WORKSPACE/gdevelop3d/miner-deeper-gdevelop.json"
+          test -f gdevelop3d/build/index.html
+          echo "HTML5 export succeeded"
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: miner-deeper-gdevelop3d-web
+          path: gdevelop3d/build
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: gdevelop3d/build
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
