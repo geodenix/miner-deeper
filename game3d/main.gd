@@ -8,12 +8,17 @@ const GRAVITY: float = 18.0
 const MINE_RANGE: float = 2.55
 const BATTERY_DRAIN_PER_SECOND: float = 0.48
 const SURFACE_RECHARGE_PER_SECOND: float = 30.0
+const BAG_CAPACITY: int = 20
+const PICKAXE_SWING_SECONDS: float = 0.24
 
 var rng := RandomNumberGenerator.new()
 var player: CharacterBody3D
 var camera: Camera3D
 var headlamp: SpotLight3D
 var hud: Control
+var pickaxe: Node3D
+var target_marker: MeshInstance3D
+var current_target: Node3D
 
 var move_input: Vector2 = Vector2.ZERO
 var flashlight_on: bool = true
@@ -23,6 +28,7 @@ var coins: int = 5000
 var inventory: Dictionary = {"coal":0,"iron":0,"gold":0,"diamond":0}
 var blocks: Dictionary = {}
 var mine_cooldown: float = 0.0
+var pickaxe_swing_left: float = 0.0
 var status_text: String = "Спускайся в шахту и разбивай породу"
 var status_timer: float = 5.0
 
@@ -31,6 +37,7 @@ func _ready() -> void:
 	create_environment()
 	create_floor_and_bounds()
 	create_player()
+	create_target_marker()
 	create_mine()
 	create_surface_station()
 	create_hud()
@@ -94,6 +101,8 @@ func create_player() -> void:
 	helmet.material_override = make_material(Color("#d9a83e"))
 	player.add_child(helmet)
 
+	create_pickaxe()
+
 	camera = Camera3D.new()
 	camera.current = true
 	camera.fov = 66.0
@@ -109,6 +118,57 @@ func create_player() -> void:
 	headlamp.shadow_enabled = false
 	camera.add_child(headlamp)
 	headlamp.position = Vector3(0,0,-0.05)
+
+func create_pickaxe() -> void:
+	pickaxe = Node3D.new()
+	pickaxe.name = "Pickaxe"
+	pickaxe.position = Vector3(0.48,0.43,-0.02)
+	pickaxe.rotation_degrees = Vector3(-18,0,-28)
+	player.add_child(pickaxe)
+
+	var handle := MeshInstance3D.new()
+	var handle_mesh := CylinderMesh.new()
+	handle_mesh.top_radius = 0.035
+	handle_mesh.bottom_radius = 0.045
+	handle_mesh.height = 0.95
+	handle.mesh = handle_mesh
+	handle.position = Vector3(0,-0.12,0)
+	handle.material_override = make_material(Color("#765033"))
+	pickaxe.add_child(handle)
+
+	var head := MeshInstance3D.new()
+	var head_mesh := BoxMesh.new()
+	head_mesh.size = Vector3(0.62,0.10,0.10)
+	head.mesh = head_mesh
+	head.position = Vector3(0,0.34,0)
+	head.material_override = make_material(Color("#777d82"))
+	pickaxe.add_child(head)
+
+	var tip := MeshInstance3D.new()
+	var tip_mesh := BoxMesh.new()
+	tip_mesh.size = Vector3(0.14,0.08,0.28)
+	tip.mesh = tip_mesh
+	tip.position = Vector3(-0.34,0.34,0)
+	tip.rotation_degrees = Vector3(0,0,24)
+	tip.material_override = make_material(Color("#6e7478"))
+	pickaxe.add_child(tip)
+
+func create_target_marker() -> void:
+	target_marker = MeshInstance3D.new()
+	target_marker.name = "MiningTarget"
+	var box := BoxMesh.new()
+	box.size = Vector3(BLOCK_SIZE*1.02,BLOCK_SIZE*1.02,BLOCK_SIZE*1.02)
+	target_marker.mesh = box
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0,0.80,0.28,0.16)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = Color("#e7b84b")
+	mat.emission_energy_multiplier = 0.45
+	target_marker.material_override = mat
+	target_marker.visible = false
+	add_child(target_marker)
 
 func create_surface_station() -> void:
 	var pad := MeshInstance3D.new()
@@ -257,6 +317,35 @@ func create_hud() -> void:
 func _on_move_changed(value: Vector2) -> void:
 	move_input = value
 
+func bag_used() -> int:
+	var total: int = 0
+	for value in inventory.values():
+		total += int(value)
+	return total
+
+func update_mining_target() -> void:
+	current_target = find_mine_target()
+	if target_marker == null:
+		return
+	if current_target == null:
+		target_marker.visible = false
+		return
+	target_marker.visible = true
+	target_marker.global_position = current_target.global_position
+
+func update_pickaxe_animation(delta: float) -> void:
+	if pickaxe == null:
+		return
+	if pickaxe_swing_left > 0.0:
+		pickaxe_swing_left = maxf(0.0,pickaxe_swing_left-delta)
+		var progress: float = 1.0 - pickaxe_swing_left/PICKAXE_SWING_SECONDS
+		var arc: float = sin(progress*PI)
+		pickaxe.rotation_degrees = Vector3(-18.0-78.0*arc,0,-28.0+20.0*arc)
+		pickaxe.position = Vector3(0.48,0.43,-0.02-0.15*arc)
+	else:
+		pickaxe.rotation_degrees = pickaxe.rotation_degrees.lerp(Vector3(-18,0,-28),clampf(delta*14.0,0.0,1.0))
+		pickaxe.position = pickaxe.position.lerp(Vector3(0.48,0.43,-0.02),clampf(delta*14.0,0.0,1.0))
+
 func _physics_process(delta: float) -> void:
 	if mine_cooldown > 0.0:
 		mine_cooldown -= delta
@@ -287,6 +376,8 @@ func _physics_process(delta: float) -> void:
 	camera.look_at(player.global_position + Vector3(0,0.8,0),Vector3.UP)
 
 	update_light_system(delta)
+	update_mining_target()
+	update_pickaxe_animation(delta)
 	update_hud()
 
 func update_light_system(delta: float) -> void:
@@ -305,11 +396,28 @@ func update_light_system(delta: float) -> void:
 func update_hud() -> void:
 	if hud == null:
 		return
-	var total: int = 0
-	for value in inventory.values():
-		total += int(value)
 	var depth: int = maxi(0,int(round((-player.global_position.z)/BLOCK_SIZE)))
-	hud.update_status(battery,flashlight_on,torch_count,total,depth,coins,status_text)
+	var target_name: String = ""
+	var target_hp: int = 0
+	var target_max: int = 0
+	if current_target != null and is_instance_valid(current_target):
+		target_name = ore_name(str(current_target.get_meta("kind")))
+		target_hp = int(current_target.get_meta("hp"))
+		target_max = int(current_target.get_meta("max_hp"))
+	hud.update_status(
+		battery,
+		flashlight_on,
+		torch_count,
+		inventory,
+		bag_used(),
+		BAG_CAPACITY,
+		depth,
+		coins,
+		target_name,
+		target_hp,
+		target_max,
+		status_text
+	)
 
 func find_mine_target() -> Node3D:
 	var forward3: Vector3 = -player.global_transform.basis.z
@@ -351,14 +459,21 @@ func mine_block() -> void:
 		return
 	mine_cooldown = 0.23
 
-	var collider: Node3D = find_mine_target()
+	var collider: Node3D = current_target
+	if collider == null or not is_instance_valid(collider):
+		collider = find_mine_target()
 	if collider == null:
 		show_status("Подойди ближе и повернись к блоку")
 		return
 
+	var kind: String = str(collider.get_meta("kind"))
+	if kind != "stone" and bag_used() >= BAG_CAPACITY:
+		show_status("Рюкзак заполнен • "+str(bag_used())+"/"+str(BAG_CAPACITY))
+		return
+
+	pickaxe_swing_left = PICKAXE_SWING_SECONDS
 	var hp: int = int(collider.get_meta("hp")) - 1
 	collider.set_meta("hp",hp)
-	var kind: String = str(collider.get_meta("kind"))
 	if hp > 0:
 		var max_hp: int = int(collider.get_meta("max_hp"))
 		show_status("Удар по породе • "+str(max_hp-hp)+"/"+str(max_hp))
@@ -370,6 +485,10 @@ func mine_block() -> void:
 	var gx: int = int(collider.get_meta("gx"))
 	var gz: int = int(collider.get_meta("gz"))
 	blocks.erase(Vector2i(gx,gz))
+	if current_target == collider:
+		current_target = null
+		if target_marker != null:
+			target_marker.visible = false
 	if inventory.has(kind):
 		inventory[kind] = int(inventory[kind]) + 1
 		show_status("+1 "+ore_name(kind))
