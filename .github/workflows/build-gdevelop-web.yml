@@ -55,6 +55,23 @@ jobs:
             "$GITHUB_WORKSPACE/gdevelop3d/miner-deeper-gdevelop.json"
           test -f gdevelop3d/build/index.html
 
+      - name: Bust browser cache for every build
+        shell: bash
+        run: |
+          BUILD_ID="${GITHUB_SHA:0:12}"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, re
+          p = Path("gdevelop3d/build/index.html")
+          s = p.read_text(encoding="utf-8")
+          build = os.environ["GITHUB_SHA"][:12]
+          s = re.sub(r'<script src="([^"]+)"', lambda m: f'<script src="{m.group(1)}?build={build}"', s)
+          s = s.replace('<link rel="manifest" href="manifest.webmanifest">', f'<link rel="manifest" href="manifest.webmanifest?build={build}">')
+          s = s.replace("<head>", f"<head>\n    <meta name=\"miner-deeper-build\" content=\"{build}\">")
+          p.write_text(s, encoding="utf-8")
+          PY
+          echo "Published build id: $BUILD_ID"
+
       - name: Upload downloadable web build
         uses: actions/upload-artifact@v4
         with:
