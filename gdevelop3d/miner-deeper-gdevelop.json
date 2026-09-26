@@ -16,9 +16,9 @@
     "pixelsRounding": false,
     "projectUuid": "4d5af5b9-d0fa-4d01-a902-000000000001",
     "scaleMode": "linear",
-    "sizeOnStartupMode": "",
+    "sizeOnStartupMode": "adaptWidth",
     "templateSlug": "",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "name": "Miner Deeper GDevelop 3D",
     "description": "Мобильный 3D-прототип шахтёра для GDevelop: движение, кирка, разрушаемые рудные блоки и рюкзак.",
     "author": "Geodenix",
@@ -2226,6 +2226,109 @@
         ]
       },
       "events": [
+        {
+          "colorB": 120,
+          "colorG": 190,
+          "colorR": 90,
+          "creationTime": 0,
+          "folded": false,
+          "name": "Responsive mobile HUD",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "parameters": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetXY"
+                  },
+                  "parameters": [
+                    "ControlsToggle",
+                    "=",
+                    "32",
+                    "=",
+                    "32"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetXY"
+                  },
+                  "parameters": [
+                    "Joystick",
+                    "=",
+                    "170",
+                    "=",
+                    "SceneWindowHeight() - 144"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetXY"
+                  },
+                  "parameters": [
+                    "JumpButton",
+                    "=",
+                    "SceneWindowWidth() - 176",
+                    "=",
+                    "SceneWindowHeight() - 144"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetXY"
+                  },
+                  "parameters": [
+                    "PickaxeButton",
+                    "=",
+                    "SceneWindowWidth() - 176",
+                    "=",
+                    "SceneWindowHeight() - 290"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetXY"
+                  },
+                  "parameters": [
+                    "PickaxeLabel",
+                    "=",
+                    "SceneWindowWidth() - 238",
+                    "=",
+                    "SceneWindowHeight() - 232"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetXY"
+                  },
+                  "parameters": [
+                    "OreHUD",
+                    "=",
+                    "max(16, SceneWindowWidth() - OreHUD.Width() - 24)",
+                    "=",
+                    "28"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetXY"
+                  },
+                  "parameters": [
+                    "MineHint",
+                    "=",
+                    "max(16, SceneWindowWidth()/2 - MineHint.Width()/2)",
+                    "=",
+                    "28"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
         {
           "colorB": 150,
           "colorG": 110,
