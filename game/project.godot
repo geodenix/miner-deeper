@@ -4,7 +4,7 @@ config_version=5
 [application]
 config/name="Шахтёр: Глубже!"
 config/description="Мобильная 2D-игра про шахтёра"
-config/version="0.9.1"
+config/version="1.0"
 run/main_scene="res://Main.tscn"
 
 [display]

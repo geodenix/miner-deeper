@@ -86,7 +86,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: miner-deeper-v0.9.1-factory-visuals-apk
+          name: miner-deeper-v1.0-rail-logistics-apk
           path: ${{ steps.export.outputs.build_directory }}/**/*.apk
           if-no-files-found: error
           retention-days: 14
