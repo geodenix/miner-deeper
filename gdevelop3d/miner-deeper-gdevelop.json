@@ -11,19 +11,19 @@
     "antialiasingMode": "MSAA",
     "antialisingEnabledOnMobile": false,
     "folderProject": false,
-    "orientation": "landscape",
+    "orientation": "portrait",
     "packageName": "com.geodenix.minerdeeper.gdevelop",
     "pixelsRounding": false,
     "projectUuid": "4d5af5b9-d0fa-4d01-a902-000000000001",
     "scaleMode": "linear",
-    "sizeOnStartupMode": "adaptWidth",
+    "sizeOnStartupMode": "adaptHeight",
     "templateSlug": "",
-    "version": "0.2.1",
+    "version": "0.5.0",
     "name": "Miner Deeper GDevelop 3D",
     "description": "Мобильный 3D-прототип шахтёра для GDevelop: движение, кирка, разрушаемые рудные блоки и рюкзак.",
     "author": "Geodenix",
-    "windowWidth": 1280,
-    "windowHeight": 720,
+    "windowWidth": 720,
+    "windowHeight": 1280,
     "latestCompilationDirectory": "",
     "maxFPS": 60,
     "minFPS": 20,
@@ -190,6 +190,46 @@
         "name": "assets/PickaxeButton.svg",
         "smoothed": true,
         "userAdded": true
+      },
+      {
+        "file": "assets/DirtWall.svg",
+        "kind": "image",
+        "metadata": "",
+        "name": "assets\\DirtWall.svg",
+        "smoothed": true,
+        "userAdded": true
+      },
+      {
+        "file": "assets/StoneBlock.svg",
+        "kind": "image",
+        "metadata": "",
+        "name": "assets\\StoneBlock.svg",
+        "smoothed": true,
+        "userAdded": true
+      },
+      {
+        "file": "assets/CoalBlock.svg",
+        "kind": "image",
+        "metadata": "",
+        "name": "assets\\CoalBlock.svg",
+        "smoothed": true,
+        "userAdded": true
+      },
+      {
+        "file": "assets/IronBlock.svg",
+        "kind": "image",
+        "metadata": "",
+        "name": "assets\\IronBlock.svg",
+        "smoothed": true,
+        "userAdded": true
+      },
+      {
+        "file": "assets/GoldBlock.svg",
+        "kind": "image",
+        "metadata": "",
+        "name": "assets\\GoldBlock.svg",
+        "smoothed": true,
+        "userAdded": true
       }
     ]
   },
@@ -294,14 +334,14 @@
           "name": "BagCapacity",
           "persistentUuid": "31000000-0000-4000-8000-000000000005",
           "type": "number",
-          "value": 20
+          "value": 50
         }
       ],
       "instances": [
         {
           "angle": 0,
           "customSize": true,
-          "height": 3900,
+          "height": 8300,
           "keepRatio": true,
           "layer": "",
           "locked": true,
@@ -309,7 +349,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000001",
           "width": 1920,
           "x": -320,
-          "y": -1800,
+          "y": -6200,
           "z": -30,
           "zOrder": -30,
           "numberProperties": [],
@@ -321,7 +361,7 @@
         {
           "angle": 0,
           "customSize": true,
-          "height": 3900,
+          "height": 8300,
           "keepRatio": true,
           "layer": "",
           "locked": true,
@@ -329,7 +369,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000002",
           "width": 64,
           "x": -384,
-          "y": -1800,
+          "y": -6200,
           "z": 30,
           "zOrder": 30,
           "numberProperties": [],
@@ -341,7 +381,7 @@
         {
           "angle": 0,
           "customSize": true,
-          "height": 3900,
+          "height": 8300,
           "keepRatio": true,
           "layer": "",
           "locked": true,
@@ -349,7 +389,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000003",
           "width": 64,
           "x": 1536,
-          "y": -1800,
+          "y": -6200,
           "z": 30,
           "zOrder": 30,
           "numberProperties": [],
@@ -369,7 +409,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000004",
           "width": 1984,
           "x": -384,
-          "y": -1800,
+          "y": -6200,
           "z": 30,
           "zOrder": 30,
           "numberProperties": [],
@@ -1370,6 +1410,1392 @@
           "numberProperties": [],
           "stringProperties": [],
           "initialVariables": []
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 170,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000001",
+          "width": 560,
+          "x": -320,
+          "y": -2050,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 170,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000002",
+          "width": 540,
+          "x": 1060,
+          "y": -2050,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000003",
+          "width": 760,
+          "x": -320,
+          "y": -2500,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000004",
+          "width": 390,
+          "x": 1210,
+          "y": -2500,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000005",
+          "width": 430,
+          "x": -320,
+          "y": -2950,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000006",
+          "width": 720,
+          "x": 880,
+          "y": -2950,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000007",
+          "width": 720,
+          "x": -320,
+          "y": -3400,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000008",
+          "width": 420,
+          "x": 1180,
+          "y": -3400,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000009",
+          "width": 430,
+          "x": -320,
+          "y": -3850,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000010",
+          "width": 700,
+          "x": 900,
+          "y": -3850,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000011",
+          "width": 760,
+          "x": -320,
+          "y": -4300,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000012",
+          "width": 390,
+          "x": 1210,
+          "y": -4300,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000013",
+          "width": 420,
+          "x": -320,
+          "y": -4750,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000014",
+          "width": 710,
+          "x": 890,
+          "y": -4750,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000015",
+          "width": 730,
+          "x": -320,
+          "y": -5200,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000016",
+          "width": 420,
+          "x": 1180,
+          "y": -5200,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000017",
+          "width": 450,
+          "x": -320,
+          "y": -5650,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 180,
+          "keepRatio": true,
+          "layer": "",
+          "locked": true,
+          "name": "Obstacle",
+          "persistentUuid": "66000000-0000-4000-8000-000000000018",
+          "width": 700,
+          "x": 900,
+          "y": -5650,
+          "z": 30,
+          "zOrder": 30,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 170,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000019",
+          "width": 88,
+          "x": 310,
+          "y": -2200,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000020",
+          "width": 88,
+          "x": 220,
+          "y": -2200,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "CoalBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000021",
+          "width": 88,
+          "x": 130,
+          "y": -2200,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000022",
+          "width": 88,
+          "x": 130,
+          "y": -2292,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000023",
+          "width": 88,
+          "x": 930,
+          "y": -2650,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000024",
+          "width": 88,
+          "x": 1020,
+          "y": -2650,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "CoalBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000025",
+          "width": 88,
+          "x": 1110,
+          "y": -2650,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000026",
+          "width": 88,
+          "x": 1110,
+          "y": -2742,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000027",
+          "width": 88,
+          "x": 310,
+          "y": -3100,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000028",
+          "width": 88,
+          "x": 220,
+          "y": -3100,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "IronBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000029",
+          "width": 88,
+          "x": 130,
+          "y": -3100,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000030",
+          "width": 88,
+          "x": 130,
+          "y": -3192,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000031",
+          "width": 88,
+          "x": 930,
+          "y": -3550,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000032",
+          "width": 88,
+          "x": 1020,
+          "y": -3550,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "IronBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000033",
+          "width": 88,
+          "x": 1110,
+          "y": -3550,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000034",
+          "width": 88,
+          "x": 1110,
+          "y": -3642,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000035",
+          "width": 88,
+          "x": 310,
+          "y": -4000,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000036",
+          "width": 88,
+          "x": 220,
+          "y": -4000,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "CoalBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000037",
+          "width": 88,
+          "x": 130,
+          "y": -4000,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000038",
+          "width": 88,
+          "x": 130,
+          "y": -4092,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000039",
+          "width": 88,
+          "x": 930,
+          "y": -4450,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000040",
+          "width": 88,
+          "x": 1020,
+          "y": -4450,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "GoldBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000041",
+          "width": 88,
+          "x": 1110,
+          "y": -4450,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000042",
+          "width": 88,
+          "x": 1110,
+          "y": -4542,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000043",
+          "width": 88,
+          "x": 310,
+          "y": -4900,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000044",
+          "width": 88,
+          "x": 220,
+          "y": -4900,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "IronBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000045",
+          "width": 88,
+          "x": 130,
+          "y": -4900,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000046",
+          "width": 88,
+          "x": 130,
+          "y": -4992,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000047",
+          "width": 88,
+          "x": 930,
+          "y": -5350,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000048",
+          "width": 88,
+          "x": 1020,
+          "y": -5350,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "GoldBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000049",
+          "width": 88,
+          "x": 1110,
+          "y": -5350,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000050",
+          "width": 88,
+          "x": 1110,
+          "y": -5442,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000051",
+          "width": 88,
+          "x": 310,
+          "y": -5800,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000052",
+          "width": 88,
+          "x": 220,
+          "y": -5800,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "GoldBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000053",
+          "width": 88,
+          "x": 130,
+          "y": -5800,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000054",
+          "width": 88,
+          "x": 130,
+          "y": -5892,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000055",
+          "width": 88,
+          "x": 420,
+          "y": -1980,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000056",
+          "width": 88,
+          "x": 780,
+          "y": -2180,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000057",
+          "width": 88,
+          "x": 780,
+          "y": -2420,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000058",
+          "width": 88,
+          "x": 520,
+          "y": -2700,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000059",
+          "width": 88,
+          "x": 480,
+          "y": -2870,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000060",
+          "width": 88,
+          "x": 800,
+          "y": -3200,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000061",
+          "width": 88,
+          "x": 790,
+          "y": -3330,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000062",
+          "width": 88,
+          "x": 510,
+          "y": -3650,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000063",
+          "width": 88,
+          "x": 470,
+          "y": -3780,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000064",
+          "width": 88,
+          "x": 810,
+          "y": -4100,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000065",
+          "width": 88,
+          "x": 790,
+          "y": -4230,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000066",
+          "width": 88,
+          "x": 500,
+          "y": -4550,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000067",
+          "width": 88,
+          "x": 470,
+          "y": -4680,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000068",
+          "width": 88,
+          "x": 800,
+          "y": -5000,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000069",
+          "width": 88,
+          "x": 790,
+          "y": -5130,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000070",
+          "width": 88,
+          "x": 520,
+          "y": -5450,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "DirtBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000071",
+          "width": 88,
+          "x": 470,
+          "y": -5580,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
+        },
+        {
+          "angle": 0,
+          "customSize": true,
+          "height": 88,
+          "keepRatio": true,
+          "layer": "",
+          "locked": false,
+          "name": "MineBlock",
+          "persistentUuid": "66000000-0000-4000-8000-000000000072",
+          "width": 88,
+          "x": 790,
+          "y": -5900,
+          "zOrder": 48,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": [],
+          "depth": 88,
+          "customDepth": true
         }
       ],
       "objects": [
@@ -1419,10 +2845,10 @@
             "frontFaceResourceName": "assets\\StartingGround.png",
             "backFaceResourceName": "assets\\StartingGround.png",
             "backFaceUpThroughWhichAxisRotation": "X",
-            "leftFaceResourceName": "assets\\StartingWall.png",
-            "rightFaceResourceName": "assets\\StartingWall.png",
-            "topFaceResourceName": "assets\\StartingWall.png",
-            "bottomFaceResourceName": "assets\\StartingWall.png",
+            "leftFaceResourceName": "assets\\DirtWall.svg",
+            "rightFaceResourceName": "assets\\DirtWall.svg",
+            "topFaceResourceName": "assets\\DirtWall.svg",
+            "bottomFaceResourceName": "assets\\DirtWall.svg",
             "frontFaceVisible": true,
             "backFaceVisible": false,
             "leftFaceVisible": true,
@@ -1616,13 +3042,13 @@
             "depth": 128,
             "enableTextureTransparency": false,
             "facesOrientation": "Y",
-            "frontFaceResourceName": "assets\\StartingWall.png",
-            "backFaceResourceName": "assets\\StartingWall.png",
+            "frontFaceResourceName": "assets\\DirtWall.svg",
+            "backFaceResourceName": "assets\\DirtWall.svg",
             "backFaceUpThroughWhichAxisRotation": "X",
-            "leftFaceResourceName": "assets\\StartingWall.png",
-            "rightFaceResourceName": "assets\\StartingWall.png",
-            "topFaceResourceName": "assets\\StartingWall.png",
-            "bottomFaceResourceName": "assets\\StartingWall.png",
+            "leftFaceResourceName": "assets\\DirtWall.svg",
+            "rightFaceResourceName": "assets\\DirtWall.svg",
+            "topFaceResourceName": "assets\\DirtWall.svg",
+            "bottomFaceResourceName": "assets\\DirtWall.svg",
             "frontFaceVisible": true,
             "backFaceVisible": true,
             "leftFaceVisible": true,
@@ -1951,7 +3377,7 @@
               "name": "Health",
               "persistentUuid": "32000000-0000-4000-8000-000000000002",
               "type": "number",
-              "value": 3
+              "value": 2
             }
           ],
           "effects": [],
@@ -1991,13 +3417,13 @@
             "depth": 88,
             "enableTextureTransparency": false,
             "facesOrientation": "Y",
-            "frontFaceResourceName": "assets\\Ore.png",
-            "backFaceResourceName": "assets\\Ore.png",
+            "frontFaceResourceName": "assets\\StoneBlock.svg",
+            "backFaceResourceName": "assets\\StoneBlock.svg",
             "backFaceUpThroughWhichAxisRotation": "X",
-            "leftFaceResourceName": "assets\\Ore.png",
-            "rightFaceResourceName": "assets\\Ore.png",
-            "topFaceResourceName": "assets\\Ore.png",
-            "bottomFaceResourceName": "assets\\Ore.png",
+            "leftFaceResourceName": "assets\\StoneBlock.svg",
+            "rightFaceResourceName": "assets\\StoneBlock.svg",
+            "topFaceResourceName": "assets\\StoneBlock.svg",
+            "bottomFaceResourceName": "assets\\StoneBlock.svg",
             "frontFaceVisible": true,
             "backFaceVisible": true,
             "leftFaceVisible": true,
@@ -2126,7 +3552,7 @@
           "variables": [],
           "effects": [],
           "behaviors": [],
-          "string": "РУДА: 0/20",
+          "string": "РЮКЗАК: 0/50",
           "font": "",
           "characterSize": 28,
           "color": {
@@ -2166,13 +3592,309 @@
           "variables": [],
           "effects": [],
           "behaviors": [],
-          "string": "Подойди к рудному блоку и нажми КИРКА • 3 удара",
+          "string": "КОПАЙ ГЛУБЖЕ • РУДА СПРЯТАНА В ПОРОДЕ",
           "font": "",
-          "characterSize": 18,
+          "characterSize": 16,
           "color": {
             "r": 235,
             "g": 235,
             "b": 235
+          }
+        },
+        {
+          "assetStoreId": "",
+          "name": "DirtBlock",
+          "persistentUuid": "65000000-0000-4000-8000-000000000001",
+          "type": "Scene3D::Cube3DObject",
+          "variables": [
+            {
+              "name": "Health",
+              "persistentUuid": "65000000-0000-4000-8000-000000000002",
+              "type": "number",
+              "value": 1
+            }
+          ],
+          "effects": [],
+          "behaviors": [
+            {
+              "name": "Physics3D",
+              "type": "Physics3D::Physics3DBehavior",
+              "object3D": "Object3D",
+              "bodyType": "Static",
+              "bullet": false,
+              "fixedRotation": false,
+              "shape": "Box",
+              "shapeOrientation": "Z",
+              "shapeDimensionA": 0,
+              "shapeDimensionB": 0,
+              "shapeDimensionC": 0,
+              "density": 1,
+              "friction": 0.3,
+              "restitution": 0.1,
+              "linearDamping": 0.1,
+              "angularDamping": 0.1,
+              "gravityScale": 1,
+              "layers": 17,
+              "masks": 17,
+              "shapeOffsetX": 0,
+              "shapeOffsetY": 0,
+              "shapeOffsetZ": 0,
+              "massCenterOffsetX": 0,
+              "massCenterOffsetY": 0,
+              "massCenterOffsetZ": 0,
+              "massOverride": 0
+            }
+          ],
+          "content": {
+            "width": 88,
+            "height": 88,
+            "depth": 88,
+            "enableTextureTransparency": false,
+            "facesOrientation": "Y",
+            "frontFaceResourceName": "assets\\DirtWall.svg",
+            "backFaceResourceName": "assets\\DirtWall.svg",
+            "backFaceUpThroughWhichAxisRotation": "X",
+            "leftFaceResourceName": "assets\\DirtWall.svg",
+            "rightFaceResourceName": "assets\\DirtWall.svg",
+            "topFaceResourceName": "assets\\DirtWall.svg",
+            "bottomFaceResourceName": "assets\\DirtWall.svg",
+            "frontFaceVisible": true,
+            "backFaceVisible": true,
+            "leftFaceVisible": true,
+            "rightFaceVisible": true,
+            "topFaceVisible": true,
+            "bottomFaceVisible": true,
+            "frontFaceResourceRepeat": true,
+            "backFaceResourceRepeat": true,
+            "leftFaceResourceRepeat": true,
+            "rightFaceResourceRepeat": true,
+            "topFaceResourceRepeat": true,
+            "bottomFaceResourceRepeat": true,
+            "materialType": "StandardWithoutMetalness",
+            "isCastingShadow": true,
+            "isReceivingShadow": true
+          }
+        },
+        {
+          "assetStoreId": "",
+          "name": "CoalBlock",
+          "persistentUuid": "65000000-0000-4000-8000-000000000003",
+          "type": "Scene3D::Cube3DObject",
+          "variables": [
+            {
+              "name": "Health",
+              "persistentUuid": "65000000-0000-4000-8000-000000000004",
+              "type": "number",
+              "value": 2
+            }
+          ],
+          "effects": [],
+          "behaviors": [
+            {
+              "name": "Physics3D",
+              "type": "Physics3D::Physics3DBehavior",
+              "object3D": "Object3D",
+              "bodyType": "Static",
+              "bullet": false,
+              "fixedRotation": false,
+              "shape": "Box",
+              "shapeOrientation": "Z",
+              "shapeDimensionA": 0,
+              "shapeDimensionB": 0,
+              "shapeDimensionC": 0,
+              "density": 1,
+              "friction": 0.3,
+              "restitution": 0.1,
+              "linearDamping": 0.1,
+              "angularDamping": 0.1,
+              "gravityScale": 1,
+              "layers": 17,
+              "masks": 17,
+              "shapeOffsetX": 0,
+              "shapeOffsetY": 0,
+              "shapeOffsetZ": 0,
+              "massCenterOffsetX": 0,
+              "massCenterOffsetY": 0,
+              "massCenterOffsetZ": 0,
+              "massOverride": 0
+            }
+          ],
+          "content": {
+            "width": 88,
+            "height": 88,
+            "depth": 88,
+            "enableTextureTransparency": false,
+            "facesOrientation": "Y",
+            "frontFaceResourceName": "assets\\CoalBlock.svg",
+            "backFaceResourceName": "assets\\CoalBlock.svg",
+            "backFaceUpThroughWhichAxisRotation": "X",
+            "leftFaceResourceName": "assets\\CoalBlock.svg",
+            "rightFaceResourceName": "assets\\CoalBlock.svg",
+            "topFaceResourceName": "assets\\CoalBlock.svg",
+            "bottomFaceResourceName": "assets\\CoalBlock.svg",
+            "frontFaceVisible": true,
+            "backFaceVisible": true,
+            "leftFaceVisible": true,
+            "rightFaceVisible": true,
+            "topFaceVisible": true,
+            "bottomFaceVisible": true,
+            "frontFaceResourceRepeat": true,
+            "backFaceResourceRepeat": true,
+            "leftFaceResourceRepeat": true,
+            "rightFaceResourceRepeat": true,
+            "topFaceResourceRepeat": true,
+            "bottomFaceResourceRepeat": true,
+            "materialType": "StandardWithoutMetalness",
+            "isCastingShadow": true,
+            "isReceivingShadow": true
+          }
+        },
+        {
+          "assetStoreId": "",
+          "name": "IronBlock",
+          "persistentUuid": "65000000-0000-4000-8000-000000000005",
+          "type": "Scene3D::Cube3DObject",
+          "variables": [
+            {
+              "name": "Health",
+              "persistentUuid": "65000000-0000-4000-8000-000000000006",
+              "type": "number",
+              "value": 4
+            }
+          ],
+          "effects": [],
+          "behaviors": [
+            {
+              "name": "Physics3D",
+              "type": "Physics3D::Physics3DBehavior",
+              "object3D": "Object3D",
+              "bodyType": "Static",
+              "bullet": false,
+              "fixedRotation": false,
+              "shape": "Box",
+              "shapeOrientation": "Z",
+              "shapeDimensionA": 0,
+              "shapeDimensionB": 0,
+              "shapeDimensionC": 0,
+              "density": 1,
+              "friction": 0.3,
+              "restitution": 0.1,
+              "linearDamping": 0.1,
+              "angularDamping": 0.1,
+              "gravityScale": 1,
+              "layers": 17,
+              "masks": 17,
+              "shapeOffsetX": 0,
+              "shapeOffsetY": 0,
+              "shapeOffsetZ": 0,
+              "massCenterOffsetX": 0,
+              "massCenterOffsetY": 0,
+              "massCenterOffsetZ": 0,
+              "massOverride": 0
+            }
+          ],
+          "content": {
+            "width": 88,
+            "height": 88,
+            "depth": 88,
+            "enableTextureTransparency": false,
+            "facesOrientation": "Y",
+            "frontFaceResourceName": "assets\\IronBlock.svg",
+            "backFaceResourceName": "assets\\IronBlock.svg",
+            "backFaceUpThroughWhichAxisRotation": "X",
+            "leftFaceResourceName": "assets\\IronBlock.svg",
+            "rightFaceResourceName": "assets\\IronBlock.svg",
+            "topFaceResourceName": "assets\\IronBlock.svg",
+            "bottomFaceResourceName": "assets\\IronBlock.svg",
+            "frontFaceVisible": true,
+            "backFaceVisible": true,
+            "leftFaceVisible": true,
+            "rightFaceVisible": true,
+            "topFaceVisible": true,
+            "bottomFaceVisible": true,
+            "frontFaceResourceRepeat": true,
+            "backFaceResourceRepeat": true,
+            "leftFaceResourceRepeat": true,
+            "rightFaceResourceRepeat": true,
+            "topFaceResourceRepeat": true,
+            "bottomFaceResourceRepeat": true,
+            "materialType": "StandardWithoutMetalness",
+            "isCastingShadow": true,
+            "isReceivingShadow": true
+          }
+        },
+        {
+          "assetStoreId": "",
+          "name": "GoldBlock",
+          "persistentUuid": "65000000-0000-4000-8000-000000000007",
+          "type": "Scene3D::Cube3DObject",
+          "variables": [
+            {
+              "name": "Health",
+              "persistentUuid": "65000000-0000-4000-8000-000000000008",
+              "type": "number",
+              "value": 5
+            }
+          ],
+          "effects": [],
+          "behaviors": [
+            {
+              "name": "Physics3D",
+              "type": "Physics3D::Physics3DBehavior",
+              "object3D": "Object3D",
+              "bodyType": "Static",
+              "bullet": false,
+              "fixedRotation": false,
+              "shape": "Box",
+              "shapeOrientation": "Z",
+              "shapeDimensionA": 0,
+              "shapeDimensionB": 0,
+              "shapeDimensionC": 0,
+              "density": 1,
+              "friction": 0.3,
+              "restitution": 0.1,
+              "linearDamping": 0.1,
+              "angularDamping": 0.1,
+              "gravityScale": 1,
+              "layers": 17,
+              "masks": 17,
+              "shapeOffsetX": 0,
+              "shapeOffsetY": 0,
+              "shapeOffsetZ": 0,
+              "massCenterOffsetX": 0,
+              "massCenterOffsetY": 0,
+              "massCenterOffsetZ": 0,
+              "massOverride": 0
+            }
+          ],
+          "content": {
+            "width": 88,
+            "height": 88,
+            "depth": 88,
+            "enableTextureTransparency": false,
+            "facesOrientation": "Y",
+            "frontFaceResourceName": "assets\\GoldBlock.svg",
+            "backFaceResourceName": "assets\\GoldBlock.svg",
+            "backFaceUpThroughWhichAxisRotation": "X",
+            "leftFaceResourceName": "assets\\GoldBlock.svg",
+            "rightFaceResourceName": "assets\\GoldBlock.svg",
+            "topFaceResourceName": "assets\\GoldBlock.svg",
+            "bottomFaceResourceName": "assets\\GoldBlock.svg",
+            "frontFaceVisible": true,
+            "backFaceVisible": true,
+            "leftFaceVisible": true,
+            "rightFaceVisible": true,
+            "topFaceVisible": true,
+            "bottomFaceVisible": true,
+            "frontFaceResourceRepeat": true,
+            "backFaceResourceRepeat": true,
+            "leftFaceResourceRepeat": true,
+            "rightFaceResourceRepeat": true,
+            "topFaceResourceRepeat": true,
+            "bottomFaceResourceRepeat": true,
+            "materialType": "StandardWithoutMetalness",
+            "isCastingShadow": true,
+            "isReceivingShadow": true
           }
         }
       ],
@@ -2248,9 +3970,9 @@
                   "parameters": [
                     "ControlsToggle",
                     "=",
-                    "32",
+                    "24",
                     "=",
-                    "32"
+                    "24"
                   ]
                 },
                 {
@@ -2260,9 +3982,9 @@
                   "parameters": [
                     "Joystick",
                     "=",
-                    "170",
+                    "112",
                     "=",
-                    "SceneWindowHeight() - 144"
+                    "SceneWindowHeight() - 150"
                   ]
                 },
                 {
@@ -2272,9 +3994,9 @@
                   "parameters": [
                     "JumpButton",
                     "=",
-                    "SceneWindowWidth() - 176",
+                    "SceneWindowWidth() - 136",
                     "=",
-                    "SceneWindowHeight() - 144"
+                    "SceneWindowHeight() - 146"
                   ]
                 },
                 {
@@ -2284,9 +4006,9 @@
                   "parameters": [
                     "PickaxeButton",
                     "=",
-                    "SceneWindowWidth() - 176",
+                    "SceneWindowWidth() - 140",
                     "=",
-                    "SceneWindowHeight() - 290"
+                    "SceneWindowHeight() - 300"
                   ]
                 },
                 {
@@ -2296,9 +4018,9 @@
                   "parameters": [
                     "PickaxeLabel",
                     "=",
-                    "SceneWindowWidth() - 238",
+                    "SceneWindowWidth() - 204",
                     "=",
-                    "SceneWindowHeight() - 232"
+                    "SceneWindowHeight() - 242"
                   ]
                 },
                 {
@@ -2308,9 +4030,9 @@
                   "parameters": [
                     "OreHUD",
                     "=",
-                    "max(16, SceneWindowWidth() - OreHUD.Width() - 24)",
+                    "SceneWindowWidth() - OreHUD.Width() - 18",
                     "=",
-                    "28"
+                    "22"
                   ]
                 },
                 {
@@ -2320,9 +4042,9 @@
                   "parameters": [
                     "MineHint",
                     "=",
-                    "max(16, SceneWindowWidth()/2 - MineHint.Width()/2)",
+                    "SceneWindowWidth()/2 - MineHint.Width()/2",
                     "=",
-                    "28"
+                    "66"
                   ]
                 }
               ]
@@ -2340,6 +4062,75 @@
           "type": "BuiltinCommonInstructions::Group",
           "parameters": [],
           "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsJustPressed"
+                  },
+                  "parameters": [
+                    "PickaxeButton",
+                    "MultitouchButton"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Collision3D::AreWithinDistance"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "Player",
+                    "155",
+                    "",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberObjectVariable"
+                  },
+                  "parameters": [
+                    "DirtBlock",
+                    "Health",
+                    "-",
+                    "1"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "NumberObjectVariable"
+                      },
+                      "parameters": [
+                        "DirtBlock",
+                        "Health",
+                        "<=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Delete"
+                      },
+                      "parameters": [
+                        "DirtBlock",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
             {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
@@ -2443,6 +4234,309 @@
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsJustPressed"
+                  },
+                  "parameters": [
+                    "PickaxeButton",
+                    "MultitouchButton"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Collision3D::AreWithinDistance"
+                  },
+                  "parameters": [
+                    "",
+                    "CoalBlock",
+                    "Player",
+                    "155",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "OreMined",
+                    "<",
+                    "Variable(BagCapacity)"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberObjectVariable"
+                  },
+                  "parameters": [
+                    "CoalBlock",
+                    "Health",
+                    "-",
+                    "1"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "NumberObjectVariable"
+                      },
+                      "parameters": [
+                        "CoalBlock",
+                        "Health",
+                        "<=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "OreMined",
+                        "+",
+                        "1"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "PlaySound"
+                      },
+                      "parameters": [
+                        "",
+                        "assets/CoinPickUp.wav",
+                        "",
+                        "75",
+                        "1"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Delete"
+                      },
+                      "parameters": [
+                        "CoalBlock",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsJustPressed"
+                  },
+                  "parameters": [
+                    "PickaxeButton",
+                    "MultitouchButton"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Collision3D::AreWithinDistance"
+                  },
+                  "parameters": [
+                    "",
+                    "IronBlock",
+                    "Player",
+                    "155",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "OreMined",
+                    "<",
+                    "Variable(BagCapacity)"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberObjectVariable"
+                  },
+                  "parameters": [
+                    "IronBlock",
+                    "Health",
+                    "-",
+                    "1"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "NumberObjectVariable"
+                      },
+                      "parameters": [
+                        "IronBlock",
+                        "Health",
+                        "<=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "OreMined",
+                        "+",
+                        "2"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "PlaySound"
+                      },
+                      "parameters": [
+                        "",
+                        "assets/CoinPickUp.wav",
+                        "",
+                        "75",
+                        "1"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Delete"
+                      },
+                      "parameters": [
+                        "IronBlock",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsJustPressed"
+                  },
+                  "parameters": [
+                    "PickaxeButton",
+                    "MultitouchButton"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Collision3D::AreWithinDistance"
+                  },
+                  "parameters": [
+                    "",
+                    "GoldBlock",
+                    "Player",
+                    "155",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "OreMined",
+                    "<",
+                    "Variable(BagCapacity)"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberObjectVariable"
+                  },
+                  "parameters": [
+                    "GoldBlock",
+                    "Health",
+                    "-",
+                    "1"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "NumberObjectVariable"
+                      },
+                      "parameters": [
+                        "GoldBlock",
+                        "Health",
+                        "<=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "OreMined",
+                        "+",
+                        "3"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "PlaySound"
+                      },
+                      "parameters": [
+                        "",
+                        "assets/CoinPickUp.wav",
+                        "",
+                        "75",
+                        "1"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Delete"
+                      },
+                      "parameters": [
+                        "GoldBlock",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
                 {
@@ -2452,7 +4546,7 @@
                   "parameters": [
                     "OreHUD",
                     "=",
-                    "\"РУДА: \"+ToString(Variable(OreMined))+\"/\"+ToString(Variable(BagCapacity))"
+                    "\"РЮКЗАК: \"+ToString(Variable(OreMined))+\"/\"+ToString(Variable(BagCapacity))"
                   ]
                 }
               ]
