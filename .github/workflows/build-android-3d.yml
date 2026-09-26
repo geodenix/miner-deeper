@@ -82,7 +82,7 @@ jobs:
       - name: Upload 3D APK
         uses: actions/upload-artifact@v4
         with:
-          name: miner-deeper-3d-v0.1-apk
+          name: miner-deeper-3d-v0.1.1-mining-fix-apk
           path: ${{ steps.export.outputs.build_directory }}/**/*.apk
           if-no-files-found: error
           retention-days: 14
