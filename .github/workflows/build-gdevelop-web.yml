@@ -9,12 +9,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: gdevelop-web
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +36,6 @@ jobs:
             https://github.com/4ian/GDevelop/releases/download/v5.6.282/GDevelop-5-5.6.282-linux.zip
           mkdir -p /tmp/gdevelop
           unzip -q /tmp/gdevelop-linux.zip -d /tmp/gdevelop
-          find /tmp/gdevelop -maxdepth 3 -type f | head -80
 
       - name: Export project to HTML5
         shell: bash
@@ -57,9 +54,8 @@ jobs:
             --run-command EXPORT_HTML5_EXTERNAL \
             "$GITHUB_WORKSPACE/gdevelop3d/miner-deeper-gdevelop.json"
           test -f gdevelop3d/build/index.html
-          echo "HTML5 export succeeded"
 
-      - name: Upload web build artifact
+      - name: Upload downloadable web build
         uses: actions/upload-artifact@v4
         with:
           name: miner-deeper-gdevelop3d-web
@@ -67,23 +63,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Publish web build to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          enablement: true
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: gdevelop3d/build
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gdevelop3d/build
+          publish_branch: gh-pages
+          force_orphan: true
