@@ -10,6 +10,9 @@ const BOTTOM_H: float = 390.0
 const SURFACE_ROW: int = 1
 const META_SAVE: String = "user://meta_v06.json"
 const MINE_SAVE: String = "user://mine_v06.json"
+const FLASHLIGHT_RADIUS: int = 5
+const TORCH_RADIUS: int = 3
+const FLASHLIGHT_DRAIN: float = 1.0
 
 enum GameState { MENU, PLAY, SHOP, QUESTS, PAUSE, GAME_OVER }
 
@@ -50,6 +53,13 @@ var contract_type: String = "ore"
 var contract_target: int = 20
 var contract_reward: int = 150
 var contract_paid: bool = false
+
+# v0.8 lighting and atmosphere
+var flashlight_on: bool = true
+var battery_capacity: int = 100
+var battery_level: float = 100.0
+var torch_count: int = 2
+var torches: Dictionary = {}
 
 var inventory: Dictionary = {
 	"coal": 0,
@@ -116,6 +126,9 @@ func shop_rect() -> Rect2:
 func quests_rect() -> Rect2:
 	return Rect2(472, control_top() + 268, 210, 52)
 
+func light_rect() -> Rect2:
+	return Rect2(472, control_top() + 326, 210, 48)
+
 func pause_rect() -> Rect2:
 	return Rect2(620, 116, 72, 40)
 
@@ -136,6 +149,12 @@ func shop_armor_rect() -> Rect2:
 
 func shop_tnt_rect() -> Rect2:
 	return Rect2(70, 650, 580, 100)
+
+func shop_torch_rect() -> Rect2:
+	return Rect2(70, 770, 580, 96)
+
+func shop_battery_rect() -> Rect2:
+	return Rect2(70, 886, 580, 96)
 
 func back_rect() -> Rect2:
 	return Rect2(90, screen_h() - 120, 540, 78)
@@ -181,6 +200,101 @@ func bag_price() -> int:
 
 func armor_price() -> int:
 	return 120 * armor_level * armor_level
+
+func torch_price() -> int:
+	return 25
+
+func battery_upgrade_price() -> int:
+	var step: int = maxi(0, int((battery_capacity - 100) / 25.0))
+	return 160 + step * 140
+
+func light_strength(pos: Vector2i) -> float:
+	if pos.y <= SURFACE_ROW:
+		return 1.0
+	var best: float = 0.0
+	var dx: float = float(pos.x - player.x)
+	var dy: float = float(pos.y - player.y)
+	var dist: float = sqrt(dx*dx + dy*dy)
+
+	# Minimal visibility around the miner even with a dead lamp.
+	best = maxf(best, clampf(0.22 * (1.0 - dist / 1.6), 0.0, 0.22))
+
+	if flashlight_on and battery_level > 0.0:
+		var lamp: float = clampf(1.0 - dist / float(FLASHLIGHT_RADIUS + 1), 0.0, 1.0)
+		best = maxf(best, lamp)
+
+	for key in torches.keys():
+		var tp: Vector2i = key
+		var tx: float = float(pos.x - tp.x)
+		var ty: float = float(pos.y - tp.y)
+		var td: float = sqrt(tx*tx + ty*ty)
+		var torch_light: float = clampf(1.0 - td / float(TORCH_RADIUS + 1), 0.0, 1.0)
+		best = maxf(best, torch_light)
+
+	return best
+
+func is_lit(pos: Vector2i) -> bool:
+	return light_strength(pos) > 0.08
+
+func drain_flashlight() -> void:
+	if player.y <= SURFACE_ROW:
+		battery_level = float(battery_capacity)
+		flashlight_on = true
+		return
+	if flashlight_on and battery_level > 0.0:
+		battery_level = maxf(0.0, battery_level - FLASHLIGHT_DRAIN)
+		if battery_level <= 0.0:
+			flashlight_on = false
+			say("ФОНАРЬ ПОГАС: аккумулятор разряжен")
+
+func toggle_flashlight() -> void:
+	if player.y <= SURFACE_ROW:
+		say("На поверхности фонарь заряжается")
+		return
+	if not flashlight_on and battery_level <= 0.0:
+		say("Аккумулятор пуст — вернись на поверхность")
+		return
+	flashlight_on = not flashlight_on
+	say("Фонарь " + ("включён" if flashlight_on else "выключен"))
+
+func place_torch() -> void:
+	if player.y <= SURFACE_ROW:
+		say("Факелы нужны под землёй")
+		return
+	if torch_count <= 0:
+		say("Факелы закончились")
+		return
+	if torches.has(player):
+		say("Здесь уже установлен факел")
+		return
+	torches[player] = true
+	torch_count -= 1
+	say("Факел установлен")
+	finish_turn()
+
+func buy_torch() -> void:
+	var price: int = torch_price()
+	if coins < price:
+		say("Нужно " + str(price) + " монет")
+		return
+	coins -= price
+	torch_count += 1
+	say("Куплен факел")
+	save_all()
+
+func upgrade_battery() -> void:
+	if battery_capacity >= 250:
+		say("Аккумулятор уже максимальный")
+		return
+	var price: int = battery_upgrade_price()
+	if coins < price:
+		say("Нужно " + str(price) + " монет")
+		return
+	coins -= price
+	battery_capacity += 25
+	battery_level = float(battery_capacity)
+	say("Аккумулятор улучшен до " + str(battery_capacity))
+	save_all()
 
 func cashout_multiplier() -> float:
 	var tiers: int = int(run_max_depth / 20)
@@ -323,6 +437,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				attack()
 			KEY_T:
 				use_tnt()
+			KEY_F:
+				toggle_flashlight()
+			KEY_R:
+				place_torch()
 
 func handle_back() -> void:
 	if state == GameState.PLAY:
@@ -360,6 +478,10 @@ func handle_touch(pos: Vector2) -> void:
 			upgrade_armor()
 		elif shop_tnt_rect().has_point(pos):
 			buy_tnt()
+		elif shop_torch_rect().has_point(pos):
+			buy_torch()
+		elif shop_battery_rect().has_point(pos):
+			upgrade_battery()
 		elif back_rect().has_point(pos):
 			state = GameState.PLAY
 		queue_redraw()
@@ -404,12 +526,14 @@ func handle_touch(pos: Vector2) -> void:
 		if player.y <= SURFACE_ROW:
 			state = GameState.SHOP
 		else:
-			say("Магазин только на поверхности")
+			place_torch()
 	elif quests_rect().has_point(pos):
 		if player.y <= SURFACE_ROW:
 			state = GameState.QUESTS
 		else:
 			use_potion()
+	elif light_rect().has_point(pos):
+		toggle_flashlight()
 	queue_redraw()
 
 func generate_mine() -> void:
@@ -461,6 +585,9 @@ func generate_mine() -> void:
 	combo_grace = 0
 	frenzy_charge = 0
 	frenzy_turns = 0
+	torches.clear()
+	battery_level = float(battery_capacity)
+	flashlight_on = true
 	roll_contract()
 	mine_loaded = true
 	say("Новая шахта. Контракт: " + contract_text())
@@ -579,13 +706,13 @@ func try_move(dir: Vector2i) -> void:
 	if target.x < 0 or target.x >= COLS or target.y < 0 or target.y >= ROWS:
 		return
 	if enemy_at(target) >= 0:
-		attack()
+		say("Впереди враг — жми УДАР / КИРКА")
 		return
 	if boss.size() > 0 and not boss_defeated and boss["pos"] == target:
-		attack()
+		say("Впереди босс — жми УДАР / КИРКА")
 		return
 	if world[target.y][target.x] != null:
-		attack()
+		say("Впереди порода — жми УДАР / КИРКА")
 		return
 
 	player = target
@@ -602,8 +729,10 @@ func try_move(dir: Vector2i) -> void:
 		sell_all()
 		settle_contract()
 		hp = max_hp()
+		battery_level = float(battery_capacity)
+		flashlight_on = true
 		if message_time <= 0.0:
-			say("На поверхности: добыча продана, здоровье восстановлено")
+			say("Поверхность: здоровье и аккумулятор восстановлены")
 
 	finish_turn()
 
@@ -663,9 +792,6 @@ func attack() -> void:
 	if int(block["hp"]) <= 0:
 		world[target.y][target.x] = null
 		resolve_broken_block(t)
-		player = target
-		run_max_depth = maxi(run_max_depth, player.y - SURFACE_ROW)
-		max_depth = maxi(max_depth, player.y)
 	else:
 		world[target.y][target.x] = block
 		say(("КРИТ! " if bool(mine_hit["crit"]) else "") + "Кирка: -" + str(mine_hit["damage"]))
@@ -719,6 +845,7 @@ func resolve_hazard(pos: Vector2i) -> void:
 
 func finish_turn() -> void:
 	turn_count += 1
+	drain_flashlight()
 	if frenzy_turns > 0:
 		frenzy_turns -= 1
 	if combo_grace > 0:
@@ -1039,7 +1166,9 @@ func save_meta() -> void:
 		"lifetime_ore":lifetime_ore,
 		"bosses_killed":bosses_killed,
 		"quest_index":quest_index,
-		"potions":potions
+		"potions":potions,
+		"battery_capacity":battery_capacity,
+		"torch_count":torch_count
 	}
 	var f := FileAccess.open(META_SAVE, FileAccess.WRITE)
 	if f:
@@ -1064,6 +1193,9 @@ func load_meta() -> void:
 	bosses_killed = maxi(0,int(data.get("bosses_killed",0)))
 	quest_index = clampi(int(data.get("quest_index",0)),0,4)
 	potions = maxi(0,int(data.get("potions",1)))
+	battery_capacity = clampi(int(data.get("battery_capacity",100)),100,250)
+	torch_count = maxi(0,int(data.get("torch_count",2)))
+	battery_level = float(battery_capacity)
 
 func save_mine() -> void:
 	if world.size() != ROWS:
@@ -1090,6 +1222,10 @@ func save_mine() -> void:
 			"damage":int(boss["damage"])
 		}
 
+	var torch_data: Array = []
+	for tp in torches.keys():
+		torch_data.append({"x":tp.x,"y":tp.y})
+
 	var data: Dictionary = {
 		"world":world,
 		"hazards":hazard_data,
@@ -1111,7 +1247,10 @@ func save_mine() -> void:
 		"contract_type":contract_type,
 		"contract_target":contract_target,
 		"contract_reward":contract_reward,
-		"contract_paid":contract_paid
+		"contract_paid":contract_paid,
+		"battery_level":battery_level,
+		"flashlight_on":flashlight_on,
+		"torches":torch_data
 	}
 	var f := FileAccess.open(MINE_SAVE, FileAccess.WRITE)
 	if f:
@@ -1145,6 +1284,10 @@ func load_mine() -> bool:
 			"damage":int(e["damage"]),"reward":int(e["reward"])
 		})
 
+	torches.clear()
+	for td in data.get("torches",[]):
+		torches[Vector2i(int(td["x"]),int(td["y"]))] = true
+
 	boss.clear()
 	var bd = data.get("boss",{})
 	if typeof(bd) == TYPE_DICTIONARY and bd.size() > 0:
@@ -1172,6 +1315,10 @@ func load_mine() -> bool:
 	contract_target = maxi(1,int(data.get("contract_target",20)))
 	contract_reward = maxi(1,int(data.get("contract_reward",150)))
 	contract_paid = bool(data.get("contract_paid",false))
+	battery_level = clampf(float(data.get("battery_level",battery_capacity)),0.0,float(battery_capacity))
+	flashlight_on = bool(data.get("flashlight_on",true))
+	if battery_level <= 0.0:
+		flashlight_on = false
 
 	var inv = data.get("inventory",{})
 	for key in inventory.keys():
@@ -1245,7 +1392,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"arcade-версия 0.7",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"шахтная версия 0.8",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -1254,7 +1401,7 @@ func draw_menu() -> void:
 
 func draw_game() -> void:
 	var h: float = screen_h()
-	draw_rect(Rect2(0,0,BASE_W,h),Color("#0f141a"))
+	draw_rect(Rect2(0,0,BASE_W,h),Color("#0b0e11"))
 
 	var min_y: int = maxi(0,player.y-10)
 	var max_y: int = mini(ROWS-1,player.y+10)
@@ -1263,61 +1410,133 @@ func draw_game() -> void:
 			var p: Vector2 = tile_pos(x,y)
 			var r := Rect2(p,Vector2(TILE-1,TILE-1))
 			if y <= SURFACE_ROW:
-				draw_rect(r,Color("#83c9ff"))
+				draw_rect(r,Color("#7899a6"))
 			else:
 				var cell := Vector2i(x,y)
 				var block = world[y][x]
 				if block == null:
-					draw_rect(r,Color("#171c22"))
-					if hazards.has(cell):
+					draw_rect(r,Color("#101417"))
+					if hazards.has(cell) and is_lit(cell):
 						draw_hazard(r,str(hazards[cell]))
 				else:
-					var t: String = str(block["type"])
-					var c: Color = block_color(t)
-					draw_rect(r,c)
-					draw_rect(r.grow(-3),c.lightened(0.10),false,2)
-					if is_ore(t):
-						draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),8,c.lightened(0.38))
-					if t.begins_with("chest"):
-						draw_chest(r,t)
-					elif t == "geode":
-						draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),13,Color("#b78cff"))
-						draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),6,Color("#e8dcff"))
-					if int(block["hp"]) < int(block["max_hp"]):
-						var ratio: float = float(block["hp"]) / float(block["max_hp"])
-						draw_rect(Rect2(r.position+Vector2(5,TILE-7),Vector2((TILE-10)*ratio,4)),Color.WHITE)
+					draw_mine_block(r,block,x,y)
+
+	for tp in torches.keys():
+		var torch_pos: Vector2i = tp
+		if torch_pos.y >= min_y and torch_pos.y <= max_y and is_lit(torch_pos):
+			draw_torch(torch_pos)
 
 	for e in enemies:
 		var ep: Vector2i = e["pos"]
-		if ep.y >= min_y and ep.y <= max_y:
+		if ep.y >= min_y and ep.y <= max_y and is_lit(ep):
 			draw_enemy(e)
 
 	if boss.size() > 0 and not boss_defeated:
 		var bp: Vector2i = boss["pos"]
-		if bp.y >= min_y and bp.y <= max_y:
+		if bp.y >= min_y and bp.y <= max_y and is_lit(bp):
 			draw_boss()
 
 	var pp: Vector2 = tile_pos(player.x,player.y)+Vector2(TILE*0.5,TILE*0.5)
 	draw_miner(pp,0.62)
 	draw_facing_marker(pp)
 
+	# Darkness is cell-based so light from torches remains permanent in explored routes.
+	for y in range(min_y,max_y+1):
+		for x in range(COLS):
+			if y <= SURFACE_ROW:
+				continue
+			var cell := Vector2i(x,y)
+			var strength: float = light_strength(cell)
+			if strength >= 0.98:
+				continue
+			var alpha: float = clampf(0.94 * (1.0 - strength),0.0,0.94)
+			draw_rect(Rect2(tile_pos(x,y),Vector2(TILE,TILE)),Color(0,0,0,alpha))
+
 	draw_hud()
 	draw_controls()
 
+func draw_mine_block(r: Rect2, block: Dictionary, x: int, y: int) -> void:
+	var t: String = str(block["type"])
+	var depth: int = maxi(0,y-SURFACE_ROW)
+	var rock: Color = Color("#655044")
+	if depth >= 25:
+		rock = Color("#5b514c")
+	if depth >= 55:
+		rock = Color("#4d4d4b")
+	if depth >= 100:
+		rock = Color("#403d39")
+	if depth >= 130:
+		rock = Color("#35363b")
+	if t == "stone":
+		rock = rock.lightened(0.12)
+
+	draw_rect(r,rock.darkened(0.28))
+	draw_rect(r.grow(-2),rock)
+	draw_line(r.position+Vector2(3,3),r.position+Vector2(r.size.x-3,3),rock.lightened(0.12),2.0)
+	draw_line(r.position+Vector2(3,3),r.position+Vector2(3,r.size.y-3),rock.lightened(0.09),2.0)
+
+	var seed: int = (x + 17) * 9187 + (y + 31) * 6791
+	for i in range(3):
+		var px: float = float((seed + i*19) % 30) + 10.0
+		var py: float = float((int(seed / 7) + i*23) % 30) + 10.0
+		draw_circle(r.position+Vector2(px,py),1.8,rock.lightened(0.08))
+
+	if is_ore(t):
+		draw_ore_veins(r,t)
+	elif t.begins_with("chest"):
+		draw_chest(r,t)
+	elif t == "geode":
+		draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),15,Color("#342f40"))
+		draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),11,Color("#725892"))
+		draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),5,Color("#bfa6db"))
+
+	var current_hp: int = int(block["hp"])
+	var block_max_hp: int = maxi(1,int(block["max_hp"]))
+	if current_hp < block_max_hp:
+		var crack: Color = Color(0.05,0.04,0.03,0.75)
+		draw_line(r.position+Vector2(11,9),r.position+Vector2(27,25),crack,2.0)
+		if current_hp * 2 <= block_max_hp:
+			draw_line(r.position+Vector2(27,25),r.position+Vector2(19,43),crack,2.0)
+			draw_line(r.position+Vector2(27,25),r.position+Vector2(41,17),crack,2.0)
+
+func draw_ore_veins(r: Rect2, t: String) -> void:
+	var ore_c: Color = Color("#25272a")
+	if t == "iron":
+		ore_c = Color("#9b7760")
+	elif t == "gold":
+		ore_c = Color("#d6ae45")
+	elif t == "diamond":
+		ore_c = Color("#76c8d8")
+	elif t == "ruby":
+		ore_c = Color("#b94a58")
+	for pt in [Vector2(14,17),Vector2(31,14),Vector2(37,34),Vector2(20,37)]:
+		draw_circle(r.position+pt,4.2,ore_c)
+		draw_circle(r.position+pt-Vector2(1,1),1.2,ore_c.lightened(0.35))
+	draw_line(r.position+Vector2(12,31),r.position+Vector2(41,20),ore_c.darkened(0.05),2.0)
+
+func draw_torch(pos: Vector2i) -> void:
+	var c: Vector2 = tile_pos(pos.x,pos.y)+Vector2(TILE*0.5,TILE*0.5)
+	draw_circle(c,20,Color(1.0,0.72,0.25,0.10))
+	draw_rect(Rect2(c+Vector2(-2,5),Vector2(4,16)),Color("#76502f"))
+	draw_circle(c+Vector2(0,2),5,Color("#e8a740"))
+	draw_circle(c+Vector2(0,0),2.5,Color("#fff0a2"))
+
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.7",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.8",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(18,105),"Кирка "+str(pick_level)+"  •  Броня "+str(armor_level)+"  •  TNT "+str(tnt)+"  •  Аптечки "+str(potions),HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color("#c7d0d8"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,105),"Кирка "+str(pick_level)+"  •  Броня "+str(armor_level)+"  •  TNT "+str(tnt)+"  •  Факелы "+str(torch_count),HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color("#c7d0d8"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,139),biome_name(maxi(0,player.y-SURFACE_ROW))+"  •  риск x"+str(snappedf(cashout_multiplier(),0.05))+"  •  серия x"+str(combo),HORIZONTAL_ALIGNMENT_LEFT,-1,15,Color("#e4b657"))
 	draw_rect(Rect2(445,112,158,18),Color("#3a2225"))
 	draw_rect(Rect2(445,112,158*(float(hp)/float(max_hp())),18),Color("#50b86d"))
 	draw_string(ThemeDB.fallback_font,Vector2(493,132),str(hp)+"/"+str(max_hp()),HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
-	draw_rect(Rect2(445,140,158,8),Color("#292333"))
+	draw_rect(Rect2(445,138,158,8),Color("#27251e"))
+	draw_rect(Rect2(445,138,158*(battery_level/float(battery_capacity)),8),Color("#e7c65b") if flashlight_on else Color("#77736a"))
+	draw_rect(Rect2(445,151,158,6),Color("#292333"))
 	var frenzy_ratio: float = 1.0 if frenzy_turns > 0 else float(frenzy_charge)/100.0
-	draw_rect(Rect2(445,140,158*frenzy_ratio,8),Color("#f2b84b") if frenzy_turns == 0 else Color("#ffd95b"))
+	draw_rect(Rect2(445,151,158*frenzy_ratio,6),Color("#f2b84b") if frenzy_turns == 0 else Color("#ffd95b"))
 	draw_small_button(pause_rect(),"II",true)
 
 	draw_rect(Rect2(45,TOP_H+8,630,50),Color(0,0,0,0.76))
@@ -1336,8 +1555,9 @@ func draw_controls() -> void:
 	draw_move_button(down_rect(),"↓")
 	draw_action_button(attack_rect(),"УДАР / КИРКА",true,Color("#8a542d"))
 	draw_action_button(tnt_rect(),("КУПИТЬ TNT • 35" if player.y <= SURFACE_ROW else "TNT • "+str(tnt)),true,Color("#783d38"))
-	draw_action_button(shop_rect(),"МАГАЗИН",player.y <= SURFACE_ROW,Color("#315f43"))
+	draw_action_button(shop_rect(),("МАГАЗИН" if player.y <= SURFACE_ROW else "ПОСТАВИТЬ ФАКЕЛ • "+str(torch_count)),true,Color("#554431"))
 	draw_action_button(quests_rect(),("ЗАДАНИЯ" if player.y <= SURFACE_ROW else "АПТЕЧКА • "+str(potions)),true,Color("#315f43"))
+	draw_action_button(light_rect(),("ФОНАРЬ ЗАРЯЖЕН" if player.y <= SURFACE_ROW else ("ФОНАРЬ: ВЫКЛ" if flashlight_on else "ФОНАРЬ: ВКЛ")),player.y > SURFACE_ROW,Color("#5b5635"))
 
 func draw_hazard(r: Rect2, kind: String) -> void:
 	if kind == "lava":
@@ -1345,17 +1565,17 @@ func draw_hazard(r: Rect2, kind: String) -> void:
 		draw_rect(Rect2(r.position+Vector2(0,9),Vector2(r.size.x,8)),Color("#f27225"))
 		draw_circle(r.position+Vector2(17,32),5,Color("#ffd05a"))
 	elif kind == "spikes":
-		draw_polygon(PackedVector2Array([
+		draw_colored_polygon(PackedVector2Array([
 			r.position+Vector2(3,r.size.y),r.position+Vector2(14,16),
 			r.position+Vector2(26,r.size.y),r.position+Vector2(39,15),
 			r.position+Vector2(50,r.size.y)
-		]),PackedColorArray([Color("#a9b2ba")]))
+		]),Color("#a9b2ba"))
 	else:
 		draw_polygon(PackedVector2Array([
 			r.position+Vector2(8,46),r.position+Vector2(18,11),
 			r.position+Vector2(29,46),r.position+Vector2(38,19),
 			r.position+Vector2(48,46)
-		]),PackedColorArray([Color("#747bea")]))
+		]),Color("#747bea"))
 
 func draw_chest(r: Rect2, t: String) -> void:
 	var band: Color = Color("#e7bd46")
@@ -1424,9 +1644,11 @@ func draw_shop() -> void:
 	draw_shop_card(shop_bag_rect(),"Рюкзак "+str(bag_capacity())+" мест","Больше добычи за один спуск",bag_price())
 	draw_shop_card(shop_armor_rect(),"Броня ур. "+str(armor_level),"HP "+str(max_hp())+" • защита "+str(armor_reduction()),armor_price())
 	draw_shop_card(shop_tnt_rect(),"Динамит x"+str(tnt),"Взрыв области 3×3",35)
+	draw_shop_card(shop_torch_rect(),"Факел x"+str(torch_count),"Постоянный свет в расчищенном тоннеле",torch_price())
+	draw_shop_card(shop_battery_rect(),"Аккумулятор "+str(battery_capacity),"Больше времени работы фонаря",battery_upgrade_price())
 	draw_menu_button(back_rect(),"НАЗАД")
 	if message_time > 0.0:
-		draw_string(ThemeDB.fallback_font,Vector2(55,815),message,HORIZONTAL_ALIGNMENT_CENTER,610,18,Color.WHITE)
+		draw_string(ThemeDB.fallback_font,Vector2(55,1015),message,HORIZONTAL_ALIGNMENT_CENTER,610,18,Color.WHITE)
 
 func draw_quests() -> void:
 	draw_screen_bg("ЗАДАНИЯ")
@@ -1472,8 +1694,8 @@ func draw_menu_button(r: Rect2, label: String) -> void:
 	draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y*0.5+8),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,20,Color.WHITE)
 
 func draw_move_button(r: Rect2, label: String) -> void:
-	draw_rect(r,Color("#284735"))
-	draw_rect(r.grow(-4),Color("#4c7b5f"),false,3)
+	draw_rect(r,Color("#29372f"))
+	draw_rect(r.grow(-4),Color("#56695d"),false,3)
 	draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y*0.5+17),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,42,Color.WHITE)
 
 func draw_small_button(r: Rect2, label: String, enabled: bool) -> void:
