@@ -217,23 +217,29 @@ func up_rect() -> Rect2:
 func down_rect() -> Rect2:
 	return Rect2(165, control_top() + 178, 126, 126)
 
+func action_stack_rect(slot: int) -> Rect2:
+	var gap: float = 7.0
+	var top_pad: float = 12.0
+	var button_h: float = 52.0
+	return Rect2(472, control_top() + top_pad + float(slot) * (button_h + gap), 210, button_h)
+
 func attack_rect() -> Rect2:
-	return Rect2(472, control_top() + 28, 210, 78)
+	return action_stack_rect(0)
 
 func tnt_rect() -> Rect2:
-	return Rect2(472, control_top() + 118, 210, 68)
+	return action_stack_rect(1)
 
 func shop_rect() -> Rect2:
-	return Rect2(472, control_top() + 198, 210, 60)
+	return action_stack_rect(2)
 
 func quests_rect() -> Rect2:
-	return Rect2(472, control_top() + 268, 210, 52)
+	return action_stack_rect(3)
 
 func light_rect() -> Rect2:
-	return Rect2(472, control_top() + 326, 210, 48)
+	return action_stack_rect(4)
 
 func logistics_rect() -> Rect2:
-	return Rect2(472, control_top() + 380, 210, 46)
+	return action_stack_rect(5)
 
 func logistics_station_rect() -> Rect2:
 	return Rect2(85, 350, 550, 90)
@@ -1859,7 +1865,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"логистическая версия 1.0",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"логистическая версия 1.0.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -2004,7 +2010,7 @@ func draw_torch(pos: Vector2i) -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v1.0",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v1.0.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
@@ -2354,4 +2360,7 @@ func draw_action_button(r: Rect2, label: String, enabled: bool, base_color: Colo
 	var c: Color = base_color if enabled else Color("#33383d")
 	draw_rect(r,c)
 	draw_rect(r.grow(-3),c.lightened(0.16),false,2)
-	draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y*0.5+6),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,15,Color.WHITE)
+	var font_size: int = 15
+	if label.length() > 20:
+		font_size = 13
+	draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y*0.5+6),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,font_size,Color.WHITE)
