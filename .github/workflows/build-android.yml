@@ -55,6 +55,22 @@ jobs:
           cache: true
           verbose: true
 
+      - name: Smoke test game startup
+        shell: bash
+        run: |
+          GODOT_BIN="/home/runner/.local/share/godot/godot_executable/Godot_v4.7.2-stable_linux.x86_64"
+          set +e
+          "$GODOT_BIN" --headless --path game --quit-after 10 2>&1 | tee smoke.log
+          RC=${PIPESTATUS[0]}
+          set -e
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid access|ERROR:" smoke.log; then
+            echo "Runtime/startup error detected"
+            exit 1
+          fi
+          if [ "$RC" -ne 0 ]; then
+            exit "$RC"
+          fi
+
       - name: Show exported files
         shell: bash
         run: |
