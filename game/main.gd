@@ -18,10 +18,26 @@ const JOYSTICK_DEADZONE: float = 28.0
 const JOYSTICK_INITIAL_REPEAT: float = 0.30
 const JOYSTICK_REPEAT: float = 0.18
 
-enum GameState { MENU, PLAY, SHOP, QUESTS, FACTORY, LOGISTICS, PAUSE, GAME_OVER }
+enum GameState { MENU, PLAY, SHOP, QUESTS, FACTORY, LOGISTICS, MAP, PAUSE, GAME_OVER }
 
 const RAIL_COST: int = 15
 const UNLOAD_STATION_COST: int = 350
+
+const FACTORY_BUILD_COSTS: Array[int] = [1200, 1900, 2900]
+const WAREHOUSE_NAMES: Array[String] = ["УГОЛЬНЫЙ СКЛАД","РУДНЫЙ СКЛАД","СКЛАД ЦЕННЫХ РУД"]
+
+const TRUCK_TYPES: Array = [
+	{"name":"МАЛЫЙ ГРУЗОВИК","capacity":15,"trip_seconds":18.0,"cost":500},
+	{"name":"САМОСВАЛ","capacity":35,"trip_seconds":11.0,"cost":1350},
+	{"name":"ТЯЖЁЛЫЙ КАРЬЕРНЫЙ","capacity":70,"trip_seconds":7.0,"cost":3100}
+]
+
+const MANUFACTURING_JOBS: Array = [
+	{"name":"Изготовить стальные балки","factory":1,"ore":"iron","amount":12,"reward":520,"seconds":22.0},
+	{"name":"Изготовить золотые контакты","factory":2,"ore":"gold","amount":7,"reward":760,"seconds":28.0},
+	{"name":"Изготовить буровые коронки","factory":2,"ore":"diamond","amount":4,"reward":1180,"seconds":35.0},
+	{"name":"Подготовить котельное топливо","factory":0,"ore":"coal","amount":18,"reward":430,"seconds":18.0}
+]
 
 const FACTORIES: Array = [
 	{
@@ -110,6 +126,22 @@ var factory_pending_payout: Array = [0,0,0]
 var factory_ready_balance: Array = [0,0,0]
 var factory_tick_accum: float = 0.0
 
+# v1.1 industrial world
+var warehouse_storage: Array = [
+	{"coal":0},
+	{"iron":0},
+	{"gold":0,"diamond":0,"ruby":0}
+]
+var factory_built: Array = [false,false,false]
+var truck_owned: Array = [0,0,0]
+var truck_busy: Array = [0,0,0]
+var truck_trips: Array = []
+var manufacturing_job_index: int = 0
+var manufacturing_job_active: bool = false
+var manufacturing_job_finish: float = 0.0
+var manufacturing_job_factory: int = -1
+var manufacturing_job_truck: int = -1
+
 # v1.0 mine logistics
 var rail_tiles: Dictionary = {}
 var unload_stations: Dictionary = {}
@@ -156,6 +188,8 @@ func _process(delta: float) -> void:
 	if factory_tick_accum >= 0.5:
 		factory_tick_accum = 0.0
 		process_factory_automation()
+		process_transport_automation()
+		process_manufacturing_job()
 
 	if state == GameState.PLAY and joystick_active and joystick_dir != Vector2i.ZERO:
 		joystick_repeat_timer -= delta
@@ -253,6 +287,25 @@ func logistics_unload_rect() -> Rect2:
 func pause_rect() -> Rect2:
 	return Rect2(620, 116, 72, 40)
 
+func map_rect() -> Rect2:
+	return Rect2(620, 72, 72, 36)
+
+func map_factory_rect(index: int) -> Rect2:
+	return Rect2(55, 175 + index * 185, 610, 160)
+
+func map_factory_build_rect(index: int) -> Rect2:
+	var r: Rect2 = map_factory_rect(index)
+	return Rect2(r.position + Vector2(390,92), Vector2(195,48))
+
+func map_truck_rect(index: int) -> Rect2:
+	return Rect2(65, 780 + index * 125, 590, 102)
+
+func map_job_rect() -> Rect2:
+	return Rect2(70, 1195, 580, 150)
+
+func map_job_start_rect() -> Rect2:
+	return Rect2(105, 1360, 510, 72)
+
 func menu_new_rect() -> Rect2:
 	return Rect2(135, 500, 450, 88)
 
@@ -284,7 +337,10 @@ func factory_start_rect() -> Rect2:
 	return Rect2(90, 690, 540, 82)
 
 func factory_claim_rect() -> Rect2:
-	return Rect2(90, 790, 540, 82)
+	return Rect2(90, 905, 540, 72)
+
+func warehouse_truck_rect(index: int) -> Rect2:
+	return Rect2(75, 610 + index * 92, 570, 78)
 
 func back_rect() -> Rect2:
 	return Rect2(90, screen_h() - 120, 540, 78)
@@ -439,6 +495,175 @@ func nearby_factory_index() -> int:
 			best_dist = d
 	return best
 
+func warehouse_units(index: int) -> int:
+	if index < 0 or index >= warehouse_storage.size():
+		return 0
+	var total: int = 0
+	var storage: Dictionary = warehouse_storage[index]
+	for ore in storage.keys():
+		total += int(storage[ore])
+	return total
+
+func available_trucks(type_index: int) -> int:
+	if type_index < 0 or type_index >= TRUCK_TYPES.size():
+		return 0
+	return maxi(0,int(truck_owned[type_index]) - int(truck_busy[type_index]))
+
+func build_remote_factory(index: int) -> void:
+	if index < 0 or index >= FACTORIES.size():
+		return
+	if bool(factory_built[index]):
+		say("Завод уже построен")
+		return
+	var price: int = int(FACTORY_BUILD_COSTS[index])
+	if coins < price:
+		say("Нужно " + str(price) + " монет")
+		return
+	coins -= price
+	factory_built[index] = true
+	say(str(FACTORIES[index]["name"]) + " построен")
+	save_all()
+
+func buy_truck(type_index: int) -> void:
+	if type_index < 0 or type_index >= TRUCK_TYPES.size():
+		return
+	var data: Dictionary = TRUCK_TYPES[type_index]
+	var price: int = int(data["cost"])
+	if coins < price:
+		say("Нужно " + str(price) + " монет")
+		return
+	coins -= price
+	truck_owned[type_index] = int(truck_owned[type_index]) + 1
+	say("Куплен: " + str(data["name"]))
+	save_all()
+
+func dispatch_warehouse(index: int, type_index: int) -> void:
+	if index < 0 or index >= FACTORIES.size():
+		return
+	if not bool(factory_built[index]):
+		say("Сначала построй завод на карте")
+		return
+	if type_index < 0 or type_index >= TRUCK_TYPES.size():
+		return
+	if available_trucks(type_index) <= 0:
+		say("Нет свободного грузовика этого типа")
+		return
+
+	var truck: Dictionary = TRUCK_TYPES[type_index]
+	var capacity: int = int(truck["capacity"])
+	var accepted: Array = FACTORIES[index]["accepted"]
+	var source: Dictionary = warehouse_storage[index]
+	var cargo: Dictionary = {}
+	var loaded: int = 0
+
+	for ore_value in accepted:
+		var ore: String = str(ore_value)
+		var available: int = int(source.get(ore,0))
+		if available <= 0 or loaded >= capacity:
+			continue
+		var take: int = mini(available,capacity-loaded)
+		source[ore] = available - take
+		cargo[ore] = take
+		loaded += take
+
+	if loaded <= 0:
+		say("На складе нет груза")
+		return
+
+	warehouse_storage[index] = source
+	truck_busy[type_index] = int(truck_busy[type_index]) + 1
+	truck_trips.append({
+		"factory":index,
+		"truck":type_index,
+		"finish":Time.get_unix_time_from_system() + float(truck["trip_seconds"]),
+		"cargo":cargo
+	})
+	say(str(truck["name"]) + ": отправлено " + str(loaded) + " ед.")
+	save_all()
+
+func process_transport_automation() -> void:
+	var changed: bool = false
+	var now: float = Time.get_unix_time_from_system()
+	for i in range(truck_trips.size()-1,-1,-1):
+		var trip: Dictionary = truck_trips[i]
+		if float(trip["finish"]) > now:
+			continue
+		var factory_index: int = int(trip["factory"])
+		var type_index: int = int(trip["truck"])
+		var cargo: Dictionary = trip["cargo"]
+		var dest: Dictionary = factory_storage[factory_index]
+		for ore in cargo.keys():
+			dest[ore] = int(dest.get(ore,0)) + int(cargo[ore])
+		factory_storage[factory_index] = dest
+		truck_busy[type_index] = maxi(0,int(truck_busy[type_index])-1)
+		truck_trips.remove_at(i)
+		changed = true
+
+	if changed:
+		process_factory_automation()
+		save_meta()
+
+func current_job() -> Dictionary:
+	return MANUFACTURING_JOBS[manufacturing_job_index % MANUFACTURING_JOBS.size()]
+
+func find_job_truck(required: int) -> int:
+	for i in range(TRUCK_TYPES.size()):
+		if int(TRUCK_TYPES[i]["capacity"]) >= required and available_trucks(i) > 0:
+			return i
+	return -1
+
+func start_manufacturing_job() -> void:
+	if manufacturing_job_active:
+		say("Производственный заказ уже выполняется")
+		return
+	var job: Dictionary = current_job()
+	var fi: int = int(job["factory"])
+	var ore: String = str(job["ore"])
+	var amount: int = int(job["amount"])
+	if not bool(factory_built[fi]):
+		say("Для заказа нужен построенный " + str(FACTORIES[fi]["name"]))
+		return
+	var source: Dictionary = warehouse_storage[fi]
+	if int(source.get(ore,0)) < amount:
+		say("На складе нужно " + str(amount) + " × " + ore_name(ore))
+		return
+	var truck_index: int = find_job_truck(amount)
+	if truck_index < 0:
+		say("Нет свободного грузовика нужной вместимости")
+		return
+
+	source[ore] = int(source.get(ore,0)) - amount
+	warehouse_storage[fi] = source
+	truck_busy[truck_index] = int(truck_busy[truck_index]) + 1
+	manufacturing_job_active = true
+	manufacturing_job_factory = fi
+	manufacturing_job_truck = truck_index
+	manufacturing_job_finish = Time.get_unix_time_from_system() + float(TRUCK_TYPES[truck_index]["trip_seconds"]) + float(job["seconds"])
+	say("Заказ отправлен в производство")
+	save_all()
+
+func process_manufacturing_job() -> void:
+	if not manufacturing_job_active:
+		return
+	if manufacturing_job_finish > Time.get_unix_time_from_system():
+		return
+	var job: Dictionary = current_job()
+	var reward: int = int(job["reward"])
+	if manufacturing_job_factory >= 0:
+		factory_ready_balance[manufacturing_job_factory] = int(factory_ready_balance[manufacturing_job_factory]) + reward
+	if manufacturing_job_truck >= 0:
+		truck_busy[manufacturing_job_truck] = maxi(0,int(truck_busy[manufacturing_job_truck])-1)
+	manufacturing_job_active = false
+	manufacturing_job_finish = 0.0
+	manufacturing_job_factory = -1
+	manufacturing_job_truck = -1
+	manufacturing_job_index = (manufacturing_job_index + 1) % MANUFACTURING_JOBS.size()
+	save_meta()
+
+func open_industry_map() -> void:
+	release_joystick()
+	state = GameState.MAP
+
 func factory_processing(index: int) -> bool:
 	if index < 0 or index >= FACTORIES.size():
 		return false
@@ -485,6 +710,8 @@ func process_factory_automation() -> void:
 	var now: float = Time.get_unix_time_from_system()
 
 	for i in range(FACTORIES.size()):
+		if not bool(factory_built[i]):
+			continue
 		var finish: float = float(factory_finish_time[i])
 		if finish > 0.0 and finish <= now and int(factory_pending_payout[i]) > 0:
 			factory_ready_balance[i] = int(factory_ready_balance[i]) + int(factory_pending_payout[i])
@@ -519,17 +746,17 @@ func factory_transfer_all(index: int, ore: String) -> void:
 		return
 	var accepted: Array = FACTORIES[index]["accepted"]
 	if not accepted.has(ore):
-		say("Этот завод не принимает " + ore_name(ore))
+		say("Этот склад не принимает " + ore_name(ore))
 		return
 	var amount: int = int(inventory.get(ore,0))
 	if amount <= 0:
 		say("В рюкзаке нет: " + ore_name(ore))
 		return
-	var storage: Dictionary = factory_storage[index]
+	var storage: Dictionary = warehouse_storage[index]
 	storage[ore] = int(storage.get(ore,0)) + amount
-	factory_storage[index] = storage
+	warehouse_storage[index] = storage
 	inventory[ore] = 0
-	say("Передано на завод: " + str(amount) + " × " + ore_name(ore))
+	say("На склад передано: " + str(amount) + " × " + ore_name(ore))
 	save_all()
 
 func factory_start(index: int) -> void:
@@ -560,7 +787,7 @@ func factory_claim(index: int) -> void:
 func open_nearby_factory() -> void:
 	var idx: int = nearby_factory_index()
 	if idx < 0:
-		say("Подойди ближе к заводу")
+		say("Подойди ближе к складу")
 		return
 	release_joystick()
 	selected_factory = idx
@@ -659,9 +886,9 @@ func unload_bag_to_rail() -> void:
 		var idx: int = ore_factory_index(str(ore))
 		if idx < 0:
 			continue
-		var storage: Dictionary = factory_storage[idx]
+		var storage: Dictionary = warehouse_storage[idx]
 		storage[ore] = int(storage.get(ore,0)) + amount
-		factory_storage[idx] = storage
+		warehouse_storage[idx] = storage
 		inventory[ore] = 0
 		moved += amount
 
@@ -669,8 +896,7 @@ func unload_bag_to_rail() -> void:
 		say("Нет руды для отправки")
 		return
 
-	process_factory_automation()
-	say("Отправлено по рельсам: " + str(moved) + " ед. • заводы запущены")
+	say("По рельсам доставлено на склады: " + str(moved) + " ед.")
 	save_all()
 
 func rail_neighbors(pos: Vector2i) -> Array[Vector2i]:
@@ -901,6 +1127,24 @@ func handle_touch(pos: Vector2) -> void:
 		queue_redraw()
 		return
 
+	if state == GameState.MAP:
+		for i in range(FACTORIES.size()):
+			if map_factory_build_rect(i).has_point(pos):
+				build_remote_factory(i)
+				queue_redraw()
+				return
+		for i in range(TRUCK_TYPES.size()):
+			if map_truck_rect(i).has_point(pos):
+				buy_truck(i)
+				queue_redraw()
+				return
+		if map_job_start_rect().has_point(pos):
+			start_manufacturing_job()
+		elif back_rect().has_point(pos):
+			state = GameState.PLAY
+		queue_redraw()
+		return
+
 	if state == GameState.FACTORY:
 		if selected_factory >= 0 and selected_factory < FACTORIES.size():
 			var accepted: Array = FACTORIES[selected_factory]["accepted"]
@@ -909,9 +1153,12 @@ func handle_touch(pos: Vector2) -> void:
 					factory_transfer_all(selected_factory,str(accepted[slot]))
 					queue_redraw()
 					return
-			if factory_start_rect().has_point(pos):
-				factory_start(selected_factory)
-			elif factory_claim_rect().has_point(pos):
+			for t_index in range(TRUCK_TYPES.size()):
+				if warehouse_truck_rect(t_index).has_point(pos):
+					dispatch_warehouse(selected_factory,t_index)
+					queue_redraw()
+					return
+			if factory_claim_rect().has_point(pos):
 				factory_claim(selected_factory)
 			elif back_rect().has_point(pos):
 				selected_factory = -1
@@ -940,7 +1187,9 @@ func handle_touch(pos: Vector2) -> void:
 	if state != GameState.PLAY:
 		return
 
-	if pause_rect().has_point(pos):
+	if map_rect().has_point(pos):
+		open_industry_map()
+	elif pause_rect().has_point(pos):
 		release_joystick()
 		save_all()
 		state = GameState.PAUSE
@@ -1607,7 +1856,17 @@ func save_meta() -> void:
 		"factory_storage":factory_storage,
 		"factory_finish_time":factory_finish_time,
 		"factory_pending_payout":factory_pending_payout,
-		"factory_ready_balance":factory_ready_balance
+		"factory_ready_balance":factory_ready_balance,
+		"warehouse_storage":warehouse_storage,
+		"factory_built":factory_built,
+		"truck_owned":truck_owned,
+		"truck_busy":truck_busy,
+		"truck_trips":truck_trips,
+		"manufacturing_job_index":manufacturing_job_index,
+		"manufacturing_job_active":manufacturing_job_active,
+		"manufacturing_job_finish":manufacturing_job_finish,
+		"manufacturing_job_factory":manufacturing_job_factory,
+		"manufacturing_job_truck":manufacturing_job_truck
 	}
 	var f := FileAccess.open(META_SAVE, FileAccess.WRITE)
 	if f:
@@ -1648,7 +1907,37 @@ func load_meta() -> void:
 	var loaded_ready = data.get("factory_ready_balance",factory_ready_balance)
 	if typeof(loaded_ready) == TYPE_ARRAY and loaded_ready.size() == FACTORIES.size():
 		factory_ready_balance = loaded_ready
+
+	var loaded_warehouse = data.get("warehouse_storage",null)
+	if typeof(loaded_warehouse) == TYPE_ARRAY and loaded_warehouse.size() == FACTORIES.size():
+		warehouse_storage = loaded_warehouse
+	else:
+		# Migration from v1.0: old surface factory stock becomes warehouse stock.
+		warehouse_storage = factory_storage.duplicate(true)
+		factory_storage = [{"coal":0},{"iron":0},{"gold":0,"diamond":0,"ruby":0}]
+
+	var loaded_built = data.get("factory_built",factory_built)
+	if typeof(loaded_built) == TYPE_ARRAY and loaded_built.size() == FACTORIES.size():
+		factory_built = loaded_built
+	var loaded_owned = data.get("truck_owned",truck_owned)
+	if typeof(loaded_owned) == TYPE_ARRAY and loaded_owned.size() == TRUCK_TYPES.size():
+		truck_owned = loaded_owned
+	var loaded_busy = data.get("truck_busy",truck_busy)
+	if typeof(loaded_busy) == TYPE_ARRAY and loaded_busy.size() == TRUCK_TYPES.size():
+		truck_busy = loaded_busy
+	var loaded_trips = data.get("truck_trips",[])
+	if typeof(loaded_trips) == TYPE_ARRAY:
+		truck_trips = loaded_trips
+
+	manufacturing_job_index = clampi(int(data.get("manufacturing_job_index",0)),0,MANUFACTURING_JOBS.size()-1)
+	manufacturing_job_active = bool(data.get("manufacturing_job_active",false))
+	manufacturing_job_finish = float(data.get("manufacturing_job_finish",0.0))
+	manufacturing_job_factory = int(data.get("manufacturing_job_factory",-1))
+	manufacturing_job_truck = int(data.get("manufacturing_job_truck",-1))
+
+	process_transport_automation()
 	process_factory_automation()
+	process_manufacturing_job()
 
 func save_mine() -> void:
 	if world.size() != ROWS:
@@ -1852,6 +2141,8 @@ func _draw() -> void:
 			draw_factory()
 		GameState.LOGISTICS:
 			draw_logistics()
+		GameState.MAP:
+			draw_industry_map()
 		GameState.PAUSE:
 			draw_game()
 			draw_pause()
@@ -1865,7 +2156,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"логистическая версия 1.0.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"промышленная версия 1.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -2010,7 +2301,7 @@ func draw_torch(pos: Vector2i) -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v1.0.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v1.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
@@ -2024,6 +2315,7 @@ func draw_hud() -> void:
 	draw_rect(Rect2(445,151,158,6),Color("#292333"))
 	var frenzy_ratio: float = 1.0 if frenzy_turns > 0 else float(frenzy_charge)/100.0
 	draw_rect(Rect2(445,151,158*frenzy_ratio,6),Color("#f2b84b") if frenzy_turns == 0 else Color("#ffd95b"))
+	draw_small_button(map_rect(),"КАРТА",true)
 	draw_small_button(pause_rect(),"II",true)
 
 	draw_rect(Rect2(45,TOP_H+8,630,50),Color(0,0,0,0.76))
@@ -2042,9 +2334,9 @@ func draw_controls() -> void:
 	draw_action_button(shop_rect(),("МАГАЗИН" if player.y <= SURFACE_ROW else "ПОСТАВИТЬ ФАКЕЛ • "+str(torch_count)),true,Color("#554431"))
 	draw_action_button(quests_rect(),("ЗАДАНИЯ" if player.y <= SURFACE_ROW else "АПТЕЧКА • "+str(potions)),true,Color("#315f43"))
 	var near_factory: int = nearby_factory_index()
-	var factory_label: String = "ЗАВОД • ПОДОЙДИ"
+	var factory_label: String = "СКЛАД • ПОДОЙДИ"
 	if near_factory >= 0:
-		factory_label = "ОТКРЫТЬ • " + str(FACTORIES[near_factory]["short"])
+		factory_label = "ОТКРЫТЬ • СКЛАД"
 	draw_action_button(light_rect(),factory_label if player.y <= SURFACE_ROW else ("ФОНАРЬ: ВЫКЛ" if flashlight_on else "ФОНАРЬ: ВКЛ"),near_factory >= 0 if player.y <= SURFACE_ROW else true,Color("#5b5635"))
 	draw_action_button(logistics_rect(),"РЕЛЬСЫ / ВЫГРУЗКА",true,Color("#4a4e52"))
 
@@ -2063,100 +2355,123 @@ func draw_joystick() -> void:
 
 func draw_surface_factories() -> void:
 	for i in range(FACTORIES.size()):
-		var data: Dictionary = FACTORIES[i]
-		var x: int = int(data["x"])
+		var x: int = int(FACTORIES[i]["x"])
 		var ground: Vector2 = tile_pos(x,SURFACE_ROW)
 		var c: Vector2 = ground + Vector2(TILE*0.5,TILE*0.5)
-
-		var body: Color = Color("#4b5154")
-		var roof: Color = Color("#353a3d")
-		var accent: Color = Color("#b2753e")
+		var body: Color = Color("#53565a")
 		if i == 0:
-			body = Color("#514a41")
-			roof = Color("#37332f")
-			accent = Color("#c39345")
-		elif i == 1:
-			body = Color("#555d62")
-			roof = Color("#343b40")
-			accent = Color("#aeb7bd")
-		else:
-			body = Color("#46515b")
-			roof = Color("#313a43")
-			accent = Color("#72a7c7")
+			body = Color("#594d40")
+		elif i == 2:
+			body = Color("#465460")
 
-		# Building body.
-		draw_rect(Rect2(c+Vector2(-47,-102),Vector2(94,87)),body.darkened(0.18))
-		draw_rect(Rect2(c+Vector2(-42,-96),Vector2(84,77)),body)
-		draw_rect(Rect2(c+Vector2(-48,-104),Vector2(96,12)),roof)
-
-		# Door and industrial windows.
-		draw_rect(Rect2(c+Vector2(-10,-53),Vector2(20,34)),Color("#202529"))
-		draw_rect(Rect2(c+Vector2(-33,-76),Vector2(16,20)),accent.darkened(0.12))
-		draw_rect(Rect2(c+Vector2(18,-76),Vector2(16,20)),accent.darkened(0.12))
-		draw_line(c+Vector2(-25,-76),c+Vector2(-25,-56),accent.lightened(0.25),2.0)
-		draw_line(c+Vector2(26,-76),c+Vector2(26,-56),accent.lightened(0.25),2.0)
-
-		# Chimney / processing stack.
-		draw_rect(Rect2(c+Vector2(23,-140),Vector2(18,38)),Color("#5e6262"))
-		draw_rect(Rect2(c+Vector2(20,-145),Vector2(24,7)),Color("#3d4142"))
-		if factory_processing(i):
-			draw_circle(c+Vector2(33,-154),10,Color(0.55,0.58,0.60,0.32))
-			draw_circle(c+Vector2(40,-166),13,Color(0.55,0.58,0.60,0.20))
-
-		# Status lamp.
-		var status: Color = Color("#858b8f")
-		if factory_ready(i):
-			status = Color("#63d77b")
-		elif factory_processing(i):
-			status = Color("#e4ad4c")
-		draw_circle(c+Vector2(-34,-113),7,status)
-
-		# Label plate.
-		draw_rect(Rect2(c+Vector2(-51,-132),Vector2(102,23)),Color(0.06,0.07,0.08,0.88))
-		draw_string(ThemeDB.fallback_font,c+Vector2(-48,-115),str(data["short"]),HORIZONTAL_ALIGNMENT_CENTER,96,12,Color("#e8eaeb"))
+		draw_rect(Rect2(c+Vector2(-48,-96),Vector2(96,80)),body.darkened(0.22))
+		draw_rect(Rect2(c+Vector2(-43,-91),Vector2(86,70)),body)
+		draw_rect(Rect2(c+Vector2(-50,-101),Vector2(100,12)),Color("#30363a"))
+		draw_rect(Rect2(c+Vector2(-13,-54),Vector2(26,33)),Color("#24292c"))
+		draw_rect(Rect2(c+Vector2(-34,-72),Vector2(16,18)),Color("#82909a"))
+		draw_rect(Rect2(c+Vector2(18,-72),Vector2(16,18)),Color("#82909a"))
+		draw_rect(Rect2(c+Vector2(-51,-128),Vector2(102,24)),Color(0.05,0.06,0.07,0.92))
+		draw_string(ThemeDB.fallback_font,c+Vector2(-48,-111),"СКЛАД "+str(i+1),HORIZONTAL_ALIGNMENT_CENTER,96,11,Color("#e8eaeb"))
+		var units: int = warehouse_units(i)
+		draw_string(ThemeDB.fallback_font,c+Vector2(-45,-80),str(units),HORIZONTAL_ALIGNMENT_CENTER,90,12,Color("#e2c36a"))
 
 func draw_factory() -> void:
 	if selected_factory < 0 or selected_factory >= FACTORIES.size():
 		state = GameState.PLAY
 		return
+	process_transport_automation()
+	process_factory_automation()
 	var data: Dictionary = FACTORIES[selected_factory]
-	draw_screen_bg(str(data["name"]))
-	draw_string(ThemeDB.fallback_font,Vector2(0,142),"РЮКЗАК → СКЛАД → ПЕРЕРАБОТКА → ДЕНЬГИ",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,16,Color("#c9d0d5"))
+	draw_screen_bg(WAREHOUSE_NAMES[selected_factory])
+	draw_string(ThemeDB.fallback_font,Vector2(0,142),"РУДНИК → СКЛАД → ГРУЗОВИК → ЗАВОД",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,16,Color("#c9d0d5"))
 
 	var accepted: Array = data["accepted"]
-	var prices: Dictionary = data["prices"]
 	for slot in range(accepted.size()):
 		var ore: String = str(accepted[slot])
 		var r: Rect2 = factory_ore_rect(slot)
-		var storage: Dictionary = factory_storage[selected_factory]
+		var storage: Dictionary = warehouse_storage[selected_factory]
 		draw_rect(r,Color("#232c31"))
 		draw_rect(r.grow(-3),Color("#465057"),false,2)
 		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,31),ore_name(ore).to_upper(),HORIZONTAL_ALIGNMENT_LEFT,180,20,Color.WHITE)
-		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,61),"В рюкзаке: "+str(int(inventory.get(ore,0)))+"  •  На складе: "+str(int(storage.get(ore,0))),HORIZONTAL_ALIGNMENT_LEFT,360,15,Color("#c7ced3"))
-		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,87),str(int(prices.get(ore,0)))+" мон. после переработки",HORIZONTAL_ALIGNMENT_LEFT,300,14,Color("#e2bd61"))
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,61),"В рюкзаке: "+str(int(inventory.get(ore,0)))+"  •  На складе: "+str(int(storage.get(ore,0))),HORIZONTAL_ALIGNMENT_LEFT,370,15,Color("#c7ced3"))
 		draw_rect(Rect2(r.position+Vector2(390,18),Vector2(165,68)),Color("#554431"))
-		draw_string(ThemeDB.fallback_font,r.position+Vector2(390,58),"ПЕРЕЛОЖИТЬ ВСЁ",HORIZONTAL_ALIGNMENT_CENTER,165,13,Color.WHITE)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(390,58),"НА СКЛАД",HORIZONTAL_ALIGNMENT_CENTER,165,13,Color.WHITE)
 
-	var stored: int = factory_stored_units(selected_factory)
-	var value: int = factory_stored_value(selected_factory)
-	draw_string(ThemeDB.fallback_font,Vector2(80,650),"На складе: "+str(stored)+" ед.  •  будущая выплата: "+str(value)+" мон.",HORIZONTAL_ALIGNMENT_LEFT,560,18,Color("#e5d8ae"))
-
-	if factory_processing(selected_factory):
-		draw_menu_button(factory_start_rect(),"ПЕРЕРАБОТКА • "+str(factory_seconds_left(selected_factory))+" сек.")
-	else:
-		draw_menu_button(factory_start_rect(),"ЗАПУСТИТЬ ПЕРЕРАБОТКУ")
+	draw_string(ThemeDB.fallback_font,Vector2(75,575),"ДОСТАВКА НА "+str(data["name"]),HORIZONTAL_ALIGNMENT_LEFT,570,19,Color("#e5d8ae"))
+	for i in range(TRUCK_TYPES.size()):
+		var truck: Dictionary = TRUCK_TYPES[i]
+		var r: Rect2 = warehouse_truck_rect(i)
+		draw_rect(r,Color("#252c30"))
+		draw_rect(r.grow(-3),Color("#4a5358"),false,2)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(16,29),str(truck["name"]),HORIZONTAL_ALIGNMENT_LEFT,310,16,Color.WHITE)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(16,56),"вместимость "+str(truck["capacity"])+" • свободно "+str(available_trucks(i))+"/"+str(truck_owned[i]),HORIZONTAL_ALIGNMENT_LEFT,340,13,Color("#c6ced3"))
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(390,47),"ОТПРАВИТЬ",HORIZONTAL_ALIGNMENT_CENTER,160,14,Color("#e5c66c"))
 
 	var ready_money: int = int(factory_ready_balance[selected_factory])
-	if ready_money > 0:
-		draw_menu_button(factory_claim_rect(),"ЗАБРАТЬ "+str(ready_money)+" МОНЕТ")
-	elif factory_processing(selected_factory):
-		draw_menu_button(factory_claim_rect(),"ПАРТИЯ ЕЩЁ НЕ ГОТОВА")
-	else:
-		draw_menu_button(factory_claim_rect(),"ГОТОВОЙ ВЫПЛАТЫ НЕТ")
-
+	draw_menu_button(factory_claim_rect(),("ЗАБРАТЬ "+str(ready_money)+" МОНЕТ" if ready_money > 0 else "ГОТОВЫХ ВЫПЛАТ НЕТ"))
 	draw_menu_button(back_rect(),"НАЗАД")
 	if message_time > 0.0:
-		draw_string(ThemeDB.fallback_font,Vector2(55,915),message,HORIZONTAL_ALIGNMENT_CENTER,610,17,Color.WHITE)
+		draw_string(ThemeDB.fallback_font,Vector2(55,1010),message,HORIZONTAL_ALIGNMENT_CENTER,610,17,Color.WHITE)
+
+func draw_industry_map() -> void:
+	process_transport_automation()
+	process_factory_automation()
+	process_manufacturing_job()
+	draw_rect(Rect2(0,0,BASE_W,screen_h()),Color("#182127"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,55),"ПРОМЫШЛЕННАЯ КАРТА",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,30,Color("#e4c46a"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,88),"Строй заводы, покупай транспорт и выполняй производственные заказы",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,14,Color("#c7d0d5"))
+
+	# Road across the industrial area.
+	draw_rect(Rect2(40,125,640,18),Color("#3b4246"))
+	for x in range(55,665,45):
+		draw_rect(Rect2(x,132,24,3),Color("#c7b66c"))
+
+	for i in range(FACTORIES.size()):
+		var r: Rect2 = map_factory_rect(i)
+		var built: bool = bool(factory_built[i])
+		draw_rect(r,Color("#222a2f"))
+		draw_rect(r.grow(-3),Color("#4a555b"),false,2)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,31),str(FACTORIES[i]["name"]),HORIZONTAL_ALIGNMENT_LEFT,360,19,Color.WHITE)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,59),("ПОСТРОЕН" if built else "СТРОИТЕЛЬНАЯ ПЛОЩАДКА"),HORIZONTAL_ALIGNMENT_LEFT,350,14,Color("#65cf7b") if built else Color("#d6a353"))
+		if built:
+			var status: String = "Свободен"
+			if factory_processing(i):
+				status = "Переработка • "+str(factory_seconds_left(i))+" сек."
+			draw_string(ThemeDB.fallback_font,r.position+Vector2(18,91),"Склад завода: "+str(factory_stored_units(i))+" • "+status,HORIZONTAL_ALIGNMENT_LEFT,350,13,Color("#bdc7cc"))
+			draw_string(ThemeDB.fallback_font,r.position+Vector2(18,119),"Готовая выручка забирается на складе у шахты",HORIZONTAL_ALIGNMENT_LEFT,360,12,Color("#d7c992"))
+		else:
+			draw_string(ThemeDB.fallback_font,r.position+Vector2(18,94),"Стоимость строительства: "+str(FACTORY_BUILD_COSTS[i])+" мон.",HORIZONTAL_ALIGNMENT_LEFT,360,14,Color("#d7c992"))
+		var br: Rect2 = map_factory_build_rect(i)
+		draw_rect(br,Color("#315f43") if not built else Color("#34383d"))
+		draw_string(ThemeDB.fallback_font,br.position+Vector2(0,30),("ПОСТРОИТЬ" if not built else "ГОТОВО"),HORIZONTAL_ALIGNMENT_CENTER,br.size.x,13,Color.WHITE)
+
+	draw_string(ThemeDB.fallback_font,Vector2(65,750),"АВТОПАРК",HORIZONTAL_ALIGNMENT_LEFT,590,22,Color("#e4c46a"))
+	for i in range(TRUCK_TYPES.size()):
+		var truck: Dictionary = TRUCK_TYPES[i]
+		var r: Rect2 = map_truck_rect(i)
+		draw_rect(r,Color("#222a2f"))
+		draw_rect(r.grow(-3),Color("#4b555b"),false,2)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(16,30),str(truck["name"]),HORIZONTAL_ALIGNMENT_LEFT,330,17,Color.WHITE)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(16,57),"вместимость "+str(truck["capacity"])+" • рейс "+str(int(truck["trip_seconds"]))+" сек.",HORIZONTAL_ALIGNMENT_LEFT,330,13,Color("#c7d0d5"))
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(16,82),"всего "+str(truck_owned[i])+" • занято "+str(truck_busy[i]),HORIZONTAL_ALIGNMENT_LEFT,300,13,Color("#c7d0d5"))
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(415,59),"КУПИТЬ\n"+str(truck["cost"]),HORIZONTAL_ALIGNMENT_CENTER,145,13,Color("#e5c66c"))
+
+	var job: Dictionary = current_job()
+	var jr: Rect2 = map_job_rect()
+	draw_rect(jr,Color("#262d31"))
+	draw_rect(jr.grow(-3),Color("#596269"),false,2)
+	draw_string(ThemeDB.fallback_font,jr.position+Vector2(18,31),"МИНИ-ЗАКАЗ",HORIZONTAL_ALIGNMENT_LEFT,220,17,Color("#e4c46a"))
+	draw_string(ThemeDB.fallback_font,jr.position+Vector2(18,61),str(job["name"]),HORIZONTAL_ALIGNMENT_LEFT,520,18,Color.WHITE)
+	draw_string(ThemeDB.fallback_font,jr.position+Vector2(18,91),"Нужно: "+str(job["amount"])+" × "+ore_name(str(job["ore"]))+" • награда "+str(job["reward"])+" мон.",HORIZONTAL_ALIGNMENT_LEFT,540,14,Color("#c7d0d5"))
+	var job_status: String = "ГОТОВ К ЗАПУСКУ"
+	if manufacturing_job_active:
+		job_status = "В ПРОИЗВОДСТВЕ • "+str(maxi(0,int(ceil(manufacturing_job_finish-Time.get_unix_time_from_system()))))+" сек."
+	draw_string(ThemeDB.fallback_font,jr.position+Vector2(18,121),job_status,HORIZONTAL_ALIGNMENT_LEFT,520,14,Color("#65cf7b") if not manufacturing_job_active else Color("#d6a353"))
+	draw_menu_button(map_job_start_rect(),("ЗАКАЗ ВЫПОЛНЯЕТСЯ" if manufacturing_job_active else "ОТПРАВИТЬ МАТЕРИАЛЫ НА ЗАКАЗ"))
+
+	draw_menu_button(back_rect(),"ВЕРНУТЬСЯ В ШАХТУ")
+	if message_time > 0.0:
+		draw_string(ThemeDB.fallback_font,Vector2(55,1470),message,HORIZONTAL_ALIGNMENT_CENTER,610,17,Color.WHITE)
 
 func draw_rail(pos: Vector2i) -> void:
 	var c: Vector2 = tile_pos(pos.x,pos.y)+Vector2(TILE*0.5,TILE*0.5)
