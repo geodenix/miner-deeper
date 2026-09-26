@@ -86,7 +86,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: miner-deeper-v1.2-explorable-map-apk
+          name: miner-deeper-v1.2.1-5000-bonus-apk
           path: ${{ steps.export.outputs.build_directory }}/**/*.apk
           if-no-files-found: error
           retention-days: 14
