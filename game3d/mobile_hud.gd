@@ -12,9 +12,14 @@ var joystick_vector: Vector2 = Vector2.ZERO
 var battery: float = 100.0
 var flashlight_on: bool = true
 var torches: int = 4
-var ore_total: int = 0
+var inventory_counts: Dictionary = {"coal":0,"iron":0,"gold":0,"diamond":0}
+var bag_used: int = 0
+var bag_capacity: int = 20
 var depth_m: int = 0
 var coins: int = 5000
+var target_name: String = ""
+var target_hp: int = 0
+var target_max: int = 0
 var status_text: String = "Спускайся в шахту"
 
 const JOY_RADIUS: float = 92.0
@@ -26,13 +31,31 @@ func _ready() -> void:
 	set_process_input(true)
 	queue_redraw()
 
-func update_status(new_battery: float, light_on: bool, torch_amount: int, ore_amount: int, depth: int, coin_amount: int, text_value: String) -> void:
+func update_status(
+	new_battery: float,
+	light_on: bool,
+	torch_amount: int,
+	new_inventory: Dictionary,
+	new_bag_used: int,
+	new_bag_capacity: int,
+	depth: int,
+	coin_amount: int,
+	new_target_name: String,
+	new_target_hp: int,
+	new_target_max: int,
+	text_value: String
+) -> void:
 	battery = new_battery
 	flashlight_on = light_on
 	torches = torch_amount
-	ore_total = ore_amount
+	inventory_counts = new_inventory.duplicate()
+	bag_used = new_bag_used
+	bag_capacity = new_bag_capacity
 	depth_m = depth
 	coins = coin_amount
+	target_name = new_target_name
+	target_hp = new_target_hp
+	target_max = new_target_max
 	status_text = text_value
 	queue_redraw()
 
@@ -119,16 +142,27 @@ func release_joystick() -> void:
 func _draw() -> void:
 	var size: Vector2 = get_viewport_rect().size
 	draw_rect(Rect2(0,0,size.x,62),Color(0.03,0.04,0.05,0.88))
-	draw_string(ThemeDB.fallback_font,Vector2(18,25),"ШАХТЁР: ГЛУБЖЕ! 3D • ПРОТОТИП 0.1",HORIZONTAL_ALIGNMENT_LEFT,520,18,Color("#f0cf69"))
-	draw_string(ThemeDB.fallback_font,Vector2(18,50),"Монеты: "+str(coins)+"   Руда: "+str(ore_total)+"   Глубина: "+str(depth_m)+" м",HORIZONTAL_ALIGNMENT_LEFT,600,15,Color.WHITE)
+	draw_string(ThemeDB.fallback_font,Vector2(18,25),"ШАХТЁР: ГЛУБЖЕ! 3D • v0.2",HORIZONTAL_ALIGNMENT_LEFT,520,18,Color("#f0cf69"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,50),"Монеты: "+str(coins)+"   Рюкзак: "+str(bag_used)+"/"+str(bag_capacity)+"   Глубина: "+str(depth_m)+" м",HORIZONTAL_ALIGNMENT_LEFT,650,15,Color.WHITE)
 
 	draw_rect(Rect2(size.x-330,15,285,16),Color("#272a2d"))
 	draw_rect(Rect2(size.x-330,15,285*clampf(battery/100.0,0.0,1.0),16),Color("#e8ca63") if flashlight_on else Color("#747474"))
 	draw_string(ThemeDB.fallback_font,Vector2(size.x-330,52),"Фонарь "+str(int(round(battery)))+"%   Факелы: "+str(torches),HORIZONTAL_ALIGNMENT_LEFT,285,14,Color.WHITE)
 
+	var ore_text: String = "Уголь "+str(int(inventory_counts.get("coal",0)))+"  •  Железо "+str(int(inventory_counts.get("iron",0)))+"  •  Золото "+str(int(inventory_counts.get("gold",0)))+"  •  Алмазы "+str(int(inventory_counts.get("diamond",0)))
+	draw_rect(Rect2(18,68,610,34),Color(0,0,0,0.48))
+	draw_string(ThemeDB.fallback_font,Vector2(28,91),ore_text,HORIZONTAL_ALIGNMENT_LEFT,590,13,Color("#d7dde1"))
+
+	if target_name != "":
+		var target_text: String = "Цель: "+target_name.to_upper()
+		if target_max > 0:
+			target_text += "  •  прочность "+str(target_hp)+"/"+str(target_max)
+		draw_rect(Rect2(size.x*0.5-250,112,500,36),Color(0.08,0.07,0.03,0.76))
+		draw_string(ThemeDB.fallback_font,Vector2(size.x*0.5-235,136),target_text,HORIZONTAL_ALIGNMENT_CENTER,470,13,Color("#f0cf69"))
+
 	if status_text != "":
-		draw_rect(Rect2(size.x*0.5-270,72,540,42),Color(0,0,0,0.62))
-		draw_string(ThemeDB.fallback_font,Vector2(size.x*0.5-255,99),status_text,HORIZONTAL_ALIGNMENT_CENTER,510,14,Color.WHITE)
+		draw_rect(Rect2(size.x*0.5-270,154,540,42),Color(0,0,0,0.62))
+		draw_string(ThemeDB.fallback_font,Vector2(size.x*0.5-255,181),status_text,HORIZONTAL_ALIGNMENT_CENTER,510,14,Color.WHITE)
 
 	var jc: Vector2 = joy_center()
 	draw_circle(jc,JOY_RADIUS,Color(0.05,0.07,0.06,0.74))
