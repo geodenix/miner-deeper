@@ -18,7 +18,10 @@ const JOYSTICK_DEADZONE: float = 28.0
 const JOYSTICK_INITIAL_REPEAT: float = 0.30
 const JOYSTICK_REPEAT: float = 0.18
 
-enum GameState { MENU, PLAY, SHOP, QUESTS, FACTORY, PAUSE, GAME_OVER }
+enum GameState { MENU, PLAY, SHOP, QUESTS, FACTORY, LOGISTICS, PAUSE, GAME_OVER }
+
+const RAIL_COST: int = 15
+const UNLOAD_STATION_COST: int = 350
 
 const FACTORIES: Array = [
 	{
@@ -104,6 +107,12 @@ var factory_storage: Array = [
 ]
 var factory_finish_time: Array = [0.0,0.0,0.0]
 var factory_pending_payout: Array = [0,0,0]
+var factory_ready_balance: Array = [0,0,0]
+var factory_tick_accum: float = 0.0
+
+# v1.0 mine logistics
+var rail_tiles: Dictionary = {}
+var unload_stations: Dictionary = {}
 
 var inventory: Dictionary = {
 	"coal": 0,
@@ -142,6 +151,12 @@ func _notification(what: int) -> void:
 func _process(delta: float) -> void:
 	if message_time > 0.0:
 		message_time -= delta
+
+	factory_tick_accum += delta
+	if factory_tick_accum >= 0.5:
+		factory_tick_accum = 0.0
+		process_factory_automation()
+
 	if state == GameState.PLAY and joystick_active and joystick_dir != Vector2i.ZERO:
 		joystick_repeat_timer -= delta
 		if joystick_repeat_timer <= 0.0:
@@ -216,6 +231,18 @@ func quests_rect() -> Rect2:
 
 func light_rect() -> Rect2:
 	return Rect2(472, control_top() + 326, 210, 48)
+
+func logistics_rect() -> Rect2:
+	return Rect2(472, control_top() + 380, 210, 46)
+
+func logistics_station_rect() -> Rect2:
+	return Rect2(85, 350, 550, 90)
+
+func logistics_rail_rect() -> Rect2:
+	return Rect2(85, 465, 550, 90)
+
+func logistics_unload_rect() -> Rect2:
+	return Rect2(85, 580, 550, 90)
 
 func pause_rect() -> Rect2:
 	return Rect2(620, 116, 72, 40)
@@ -409,19 +436,62 @@ func nearby_factory_index() -> int:
 func factory_processing(index: int) -> bool:
 	if index < 0 or index >= FACTORIES.size():
 		return false
-	var finish: float = float(factory_finish_time[index])
-	return finish > Time.get_unix_time_from_system()
+	return float(factory_finish_time[index]) > Time.get_unix_time_from_system()
 
 func factory_ready(index: int) -> bool:
 	if index < 0 or index >= FACTORIES.size():
 		return false
-	var finish: float = float(factory_finish_time[index])
-	return finish > 0.0 and finish <= Time.get_unix_time_from_system() and int(factory_pending_payout[index]) > 0
+	return int(factory_ready_balance[index]) > 0
 
 func factory_seconds_left(index: int) -> int:
 	if not factory_processing(index):
 		return 0
 	return maxi(0,int(ceil(float(factory_finish_time[index]) - Time.get_unix_time_from_system())))
+
+func start_factory_batch(index: int, announce: bool = false) -> bool:
+	if index < 0 or index >= FACTORIES.size():
+		return false
+	if factory_processing(index):
+		return false
+	var units: int = factory_stored_units(index)
+	if units <= 0:
+		return false
+
+	var payout: int = factory_stored_value(index)
+	var data: Dictionary = FACTORIES[index]
+	var seconds: float = float(data["base_seconds"]) + float(units) * float(data["seconds_per_unit"])
+	seconds = minf(seconds,180.0)
+
+	factory_pending_payout[index] = payout
+	factory_finish_time[index] = Time.get_unix_time_from_system() + seconds
+
+	var storage: Dictionary = factory_storage[index]
+	for ore in storage.keys():
+		storage[ore] = 0
+	factory_storage[index] = storage
+
+	if announce:
+		say("Переработка запущена • " + str(int(ceil(seconds))) + " сек.")
+	return true
+
+func process_factory_automation() -> void:
+	var changed: bool = false
+	var now: float = Time.get_unix_time_from_system()
+
+	for i in range(FACTORIES.size()):
+		var finish: float = float(factory_finish_time[i])
+		if finish > 0.0 and finish <= now and int(factory_pending_payout[i]) > 0:
+			factory_ready_balance[i] = int(factory_ready_balance[i]) + int(factory_pending_payout[i])
+			factory_pending_payout[i] = 0
+			factory_finish_time[i] = 0.0
+			changed = true
+
+		if not factory_processing(i) and factory_stored_units(i) > 0:
+			if start_factory_batch(i,false):
+				changed = true
+
+	if changed:
+		save_meta()
 
 func factory_stored_units(index: int) -> int:
 	var total: int = 0
@@ -462,40 +532,23 @@ func factory_start(index: int) -> void:
 	if factory_processing(index):
 		say("Завод уже перерабатывает партию")
 		return
-	if factory_ready(index):
-		say("Сначала забери готовую выплату")
-		return
-	var units: int = factory_stored_units(index)
-	if units <= 0:
+	if factory_stored_units(index) <= 0:
 		say("Склад завода пуст")
 		return
-	var payout: int = factory_stored_value(index)
-	var data: Dictionary = FACTORIES[index]
-	var seconds: float = float(data["base_seconds"]) + float(units) * float(data["seconds_per_unit"])
-	seconds = minf(seconds,180.0)
-	factory_pending_payout[index] = payout
-	factory_finish_time[index] = Time.get_unix_time_from_system() + seconds
-	var storage: Dictionary = factory_storage[index]
-	for ore in storage.keys():
-		storage[ore] = 0
-	factory_storage[index] = storage
-	say("Переработка запущена • " + str(int(ceil(seconds))) + " сек.")
-	save_all()
+	if start_factory_batch(index,true):
+		save_all()
 
 func factory_claim(index: int) -> void:
 	if index < 0 or index >= FACTORIES.size():
 		return
-	if factory_processing(index):
-		say("Партия ещё перерабатывается")
-		return
-	if not factory_ready(index):
+	process_factory_automation()
+	var payout: int = int(factory_ready_balance[index])
+	if payout <= 0:
 		say("Готовой выплаты пока нет")
 		return
-	var payout: int = int(factory_pending_payout[index])
 	coins += payout
-	factory_pending_payout[index] = 0
-	factory_finish_time[index] = 0.0
-	say("Завод выплатил +" + str(payout) + " монет")
+	factory_ready_balance[index] = 0
+	say("Забрано с завода +" + str(payout) + " монет")
 	save_all()
 
 func open_nearby_factory() -> void:
@@ -506,6 +559,120 @@ func open_nearby_factory() -> void:
 	release_joystick()
 	selected_factory = idx
 	state = GameState.FACTORY
+
+func logistics_open() -> void:
+	release_joystick()
+	state = GameState.LOGISTICS
+
+func rail_can_build_here(pos: Vector2i) -> bool:
+	if pos.x < 0 or pos.x >= COLS or pos.y < 0 or pos.y >= ROWS:
+		return false
+	if pos.y > SURFACE_ROW and world[pos.y][pos.x] != null:
+		return false
+	if hazards.has(pos):
+		return false
+	return true
+
+func build_rail_here() -> void:
+	if not rail_can_build_here(player):
+		say("Рельсы кладутся только по расчищенному пути")
+		return
+	if rail_tiles.has(player):
+		say("Здесь уже лежат рельсы")
+		return
+	if coins < RAIL_COST:
+		say("Нужно " + str(RAIL_COST) + " монет на секцию рельс")
+		return
+	coins -= RAIL_COST
+	rail_tiles[player] = true
+	say("Рельсы проложены • -" + str(RAIL_COST) + " монет")
+	save_all()
+
+func build_unload_station_here() -> void:
+	if player.y <= SURFACE_ROW:
+		say("Пункт выгрузки строится только под землёй")
+		return
+	if not rail_can_build_here(player):
+		say("Нужно расчищенное безопасное место")
+		return
+	if unload_stations.has(player):
+		say("Здесь уже есть пункт выгрузки")
+		return
+	if coins < UNLOAD_STATION_COST:
+		say("Нужно " + str(UNLOAD_STATION_COST) + " монет")
+		return
+	coins -= UNLOAD_STATION_COST
+	unload_stations[player] = true
+	rail_tiles[player] = true
+	say("Пункт выгрузки построен")
+	save_all()
+
+func rail_connected_to_surface(station: Vector2i) -> bool:
+	if not unload_stations.has(station):
+		return false
+	var queue: Array[Vector2i] = [station]
+	var visited: Dictionary = {station:true}
+	var dirs: Array[Vector2i] = [Vector2i.LEFT,Vector2i.RIGHT,Vector2i.UP,Vector2i.DOWN]
+
+	while not queue.is_empty():
+		var p: Vector2i = queue.pop_front()
+		if p.y <= SURFACE_ROW and rail_tiles.has(p):
+			return true
+		for d in dirs:
+			var np: Vector2i = p + d
+			if visited.has(np):
+				continue
+			if rail_tiles.has(np):
+				visited[np] = true
+				queue.append(np)
+	return false
+
+func ore_factory_index(ore: String) -> int:
+	for i in range(FACTORIES.size()):
+		var accepted: Array = FACTORIES[i]["accepted"]
+		if accepted.has(ore):
+			return i
+	return -1
+
+func unload_bag_to_rail() -> void:
+	if not unload_stations.has(player):
+		say("Встань на пункт выгрузки")
+		return
+	if not rail_connected_to_surface(player):
+		say("Нет непрерывных рельс до поверхности")
+		return
+	if bag_used() <= 0:
+		say("Рюкзак пуст")
+		return
+
+	var moved: int = 0
+	for ore in inventory.keys():
+		var amount: int = int(inventory[ore])
+		if amount <= 0:
+			continue
+		var idx: int = ore_factory_index(str(ore))
+		if idx < 0:
+			continue
+		var storage: Dictionary = factory_storage[idx]
+		storage[ore] = int(storage.get(ore,0)) + amount
+		factory_storage[idx] = storage
+		inventory[ore] = 0
+		moved += amount
+
+	if moved <= 0:
+		say("Нет руды для отправки")
+		return
+
+	process_factory_automation()
+	say("Отправлено по рельсам: " + str(moved) + " ед. • заводы запущены")
+	save_all()
+
+func rail_neighbors(pos: Vector2i) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for d in [Vector2i.LEFT,Vector2i.RIGHT,Vector2i.UP,Vector2i.DOWN]:
+		if rail_tiles.has(pos + d):
+			out.append(d)
+	return out
 
 func cashout_multiplier() -> float:
 	var tiers: int = int(run_max_depth / 20)
@@ -678,7 +845,7 @@ func handle_back() -> void:
 	release_joystick()
 	if state == GameState.PLAY:
 		state = GameState.PAUSE
-	elif state in [GameState.SHOP, GameState.QUESTS, GameState.FACTORY, GameState.PAUSE]:
+	elif state in [GameState.SHOP, GameState.QUESTS, GameState.FACTORY, GameState.LOGISTICS, GameState.PAUSE]:
 		state = GameState.PLAY
 	queue_redraw()
 
@@ -746,6 +913,18 @@ func handle_touch(pos: Vector2) -> void:
 		queue_redraw()
 		return
 
+	if state == GameState.LOGISTICS:
+		if logistics_station_rect().has_point(pos):
+			build_unload_station_here()
+		elif logistics_rail_rect().has_point(pos):
+			build_rail_here()
+		elif logistics_unload_rect().has_point(pos):
+			unload_bag_to_rail()
+		elif back_rect().has_point(pos):
+			state = GameState.PLAY
+		queue_redraw()
+		return
+
 	if state == GameState.GAME_OVER:
 		if game_over_rect().has_point(pos):
 			respawn()
@@ -781,6 +960,8 @@ func handle_touch(pos: Vector2) -> void:
 			open_nearby_factory()
 		else:
 			toggle_flashlight()
+	elif logistics_rect().has_point(pos):
+		logistics_open()
 	queue_redraw()
 
 func generate_mine() -> void:
@@ -833,6 +1014,8 @@ func generate_mine() -> void:
 	frenzy_charge = 0
 	frenzy_turns = 0
 	torches.clear()
+	rail_tiles.clear()
+	unload_stations.clear()
 	battery_level = float(battery_capacity)
 	flashlight_on = true
 	roll_contract()
@@ -1417,7 +1600,8 @@ func save_meta() -> void:
 		"torch_count":torch_count,
 		"factory_storage":factory_storage,
 		"factory_finish_time":factory_finish_time,
-		"factory_pending_payout":factory_pending_payout
+		"factory_pending_payout":factory_pending_payout,
+		"factory_ready_balance":factory_ready_balance
 	}
 	var f := FileAccess.open(META_SAVE, FileAccess.WRITE)
 	if f:
@@ -1455,6 +1639,10 @@ func load_meta() -> void:
 	var loaded_payout = data.get("factory_pending_payout",factory_pending_payout)
 	if typeof(loaded_payout) == TYPE_ARRAY and loaded_payout.size() == FACTORIES.size():
 		factory_pending_payout = loaded_payout
+	var loaded_ready = data.get("factory_ready_balance",factory_ready_balance)
+	if typeof(loaded_ready) == TYPE_ARRAY and loaded_ready.size() == FACTORIES.size():
+		factory_ready_balance = loaded_ready
+	process_factory_automation()
 
 func save_mine() -> void:
 	if world.size() != ROWS:
@@ -1485,6 +1673,13 @@ func save_mine() -> void:
 	for tp in torches.keys():
 		torch_data.append({"x":tp.x,"y":tp.y})
 
+	var rail_data: Array = []
+	for rp in rail_tiles.keys():
+		rail_data.append({"x":rp.x,"y":rp.y})
+	var station_data: Array = []
+	for sp in unload_stations.keys():
+		station_data.append({"x":sp.x,"y":sp.y})
+
 	var data: Dictionary = {
 		"world":world,
 		"hazards":hazard_data,
@@ -1509,7 +1704,9 @@ func save_mine() -> void:
 		"contract_paid":contract_paid,
 		"battery_level":battery_level,
 		"flashlight_on":flashlight_on,
-		"torches":torch_data
+		"torches":torch_data,
+		"rails":rail_data,
+		"unload_stations":station_data
 	}
 	var f := FileAccess.open(MINE_SAVE, FileAccess.WRITE)
 	if f:
@@ -1546,6 +1743,13 @@ func load_mine() -> bool:
 	torches.clear()
 	for td in data.get("torches",[]):
 		torches[Vector2i(int(td["x"]),int(td["y"]))] = true
+
+	rail_tiles.clear()
+	for rd in data.get("rails",[]):
+		rail_tiles[Vector2i(int(rd["x"]),int(rd["y"]))] = true
+	unload_stations.clear()
+	for sd in data.get("unload_stations",[]):
+		unload_stations[Vector2i(int(sd["x"]),int(sd["y"]))] = true
 
 	boss.clear()
 	var bd = data.get("boss",{})
@@ -1640,6 +1844,8 @@ func _draw() -> void:
 			draw_quests()
 		GameState.FACTORY:
 			draw_factory()
+		GameState.LOGISTICS:
+			draw_logistics()
 		GameState.PAUSE:
 			draw_game()
 			draw_pause()
@@ -1653,7 +1859,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"заводская версия 0.9.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"логистическая версия 1.0",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -1685,6 +1891,16 @@ func draw_game() -> void:
 	# Surface facilities are visual world objects and must be drawn during _draw().
 	if player.y <= 8:
 		draw_surface_factories()
+
+	for rp in rail_tiles.keys():
+		var rail_pos: Vector2i = rp
+		if rail_pos.y >= min_y and rail_pos.y <= max_y:
+			draw_rail(rail_pos)
+
+	for sp in unload_stations.keys():
+		var station_pos: Vector2i = sp
+		if station_pos.y >= min_y and station_pos.y <= max_y:
+			draw_unload_station(station_pos)
 
 	for tp in torches.keys():
 		var torch_pos: Vector2i = tp
@@ -1788,7 +2004,7 @@ func draw_torch(pos: Vector2i) -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.9.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v1.0",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
@@ -1824,6 +2040,7 @@ func draw_controls() -> void:
 	if near_factory >= 0:
 		factory_label = "ОТКРЫТЬ • " + str(FACTORIES[near_factory]["short"])
 	draw_action_button(light_rect(),factory_label if player.y <= SURFACE_ROW else ("ФОНАРЬ: ВЫКЛ" if flashlight_on else "ФОНАРЬ: ВКЛ"),near_factory >= 0 if player.y <= SURFACE_ROW else true,Color("#5b5635"))
+	draw_action_button(logistics_rect(),"РЕЛЬСЫ / ВЫГРУЗКА",true,Color("#4a4e52"))
 
 func draw_joystick() -> void:
 	var c: Vector2 = joystick_center()
@@ -1923,8 +2140,9 @@ func draw_factory() -> void:
 	else:
 		draw_menu_button(factory_start_rect(),"ЗАПУСТИТЬ ПЕРЕРАБОТКУ")
 
-	if factory_ready(selected_factory):
-		draw_menu_button(factory_claim_rect(),"ЗАБРАТЬ "+str(int(factory_pending_payout[selected_factory]))+" МОНЕТ")
+	var ready_money: int = int(factory_ready_balance[selected_factory])
+	if ready_money > 0:
+		draw_menu_button(factory_claim_rect(),"ЗАБРАТЬ "+str(ready_money)+" МОНЕТ")
 	elif factory_processing(selected_factory):
 		draw_menu_button(factory_claim_rect(),"ПАРТИЯ ЕЩЁ НЕ ГОТОВА")
 	else:
@@ -1933,6 +2151,59 @@ func draw_factory() -> void:
 	draw_menu_button(back_rect(),"НАЗАД")
 	if message_time > 0.0:
 		draw_string(ThemeDB.fallback_font,Vector2(55,915),message,HORIZONTAL_ALIGNMENT_CENTER,610,17,Color.WHITE)
+
+func draw_rail(pos: Vector2i) -> void:
+	var c: Vector2 = tile_pos(pos.x,pos.y)+Vector2(TILE*0.5,TILE*0.5)
+	var neighbors: Array[Vector2i] = rail_neighbors(pos)
+	var metal: Color = Color("#8e969a")
+	var sleeper: Color = Color("#684b35")
+
+	# Sleepers.
+	draw_rect(Rect2(c+Vector2(-22,-14),Vector2(44,5)),sleeper)
+	draw_rect(Rect2(c+Vector2(-22,-2),Vector2(44,5)),sleeper)
+	draw_rect(Rect2(c+Vector2(-22,10),Vector2(44,5)),sleeper)
+
+	var horizontal: bool = neighbors.has(Vector2i.LEFT) or neighbors.has(Vector2i.RIGHT)
+	var vertical: bool = neighbors.has(Vector2i.UP) or neighbors.has(Vector2i.DOWN)
+	if horizontal or not vertical:
+		draw_line(c+Vector2(-25,-8),c+Vector2(25,-8),metal,4.0)
+		draw_line(c+Vector2(-25,8),c+Vector2(25,8),metal,4.0)
+	if vertical:
+		draw_line(c+Vector2(-8,-25),c+Vector2(-8,25),metal,4.0)
+		draw_line(c+Vector2(8,-25),c+Vector2(8,25),metal,4.0)
+
+func draw_unload_station(pos: Vector2i) -> void:
+	var c: Vector2 = tile_pos(pos.x,pos.y)+Vector2(TILE*0.5,TILE*0.5)
+	var connected: bool = rail_connected_to_surface(pos)
+	draw_rect(Rect2(c+Vector2(-23,-20),Vector2(46,36)),Color("#555b60"))
+	draw_rect(Rect2(c+Vector2(-18,-15),Vector2(36,20)),Color("#2c3235"))
+	draw_rect(Rect2(c+Vector2(-25,12),Vector2(50,7)),Color("#8a633e"))
+	draw_circle(c+Vector2(17,-13),5,Color("#62cf78") if connected else Color("#c4534f"))
+	draw_string(ThemeDB.fallback_font,c+Vector2(-25,30),"ВЫГРУЗКА",HORIZONTAL_ALIGNMENT_CENTER,50,8,Color("#d7dcdf"))
+
+func draw_logistics() -> void:
+	draw_screen_bg("ШАХТНАЯ ЛОГИСТИКА")
+	draw_string(ThemeDB.fallback_font,Vector2(60,145),"Строй пункт выгрузки и соединяй его рельсами с поверхностью.",HORIZONTAL_ALIGNMENT_CENTER,600,16,Color("#c7ced3"))
+	draw_string(ThemeDB.fallback_font,Vector2(60,178),"Руда сама отправится на нужный завод. Деньги забираются наверху.",HORIZONTAL_ALIGNMENT_CENTER,600,15,Color("#d9c587"))
+
+	var here_station: bool = unload_stations.has(player)
+	var connected: bool = here_station and rail_connected_to_surface(player)
+	var status: String = "Нет пункта выгрузки в этой клетке"
+	if here_station:
+		status = "Линия до поверхности: " + ("ПОДКЛЮЧЕНА" if connected else "НЕ ПОДКЛЮЧЕНА")
+	draw_string(ThemeDB.fallback_font,Vector2(70,260),status,HORIZONTAL_ALIGNMENT_LEFT,580,20,Color("#65cf7b") if connected else Color("#e0a458"))
+
+	draw_menu_button(logistics_station_rect(),("ПУНКТ УЖЕ ПОСТРОЕН" if here_station else "ПОСТРОИТЬ ПУНКТ ВЫГРУЗКИ • "+str(UNLOAD_STATION_COST)))
+	draw_menu_button(logistics_rail_rect(),("РЕЛЬСЫ УЖЕ ЛЕЖАТ" if rail_tiles.has(player) else "ПРОЛОЖИТЬ РЕЛЬС • "+str(RAIL_COST)))
+	draw_menu_button(logistics_unload_rect(),"ВЫГРУЗИТЬ РЮКЗАК В ВАГОНЕТКУ")
+
+	draw_string(ThemeDB.fallback_font,Vector2(90,705),"В рюкзаке: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,540,18,Color.WHITE)
+	draw_string(ThemeDB.fallback_font,Vector2(90,740),"Рельс построено: "+str(rail_tiles.size())+" секций",HORIZONTAL_ALIGNMENT_LEFT,540,16,Color("#c5ccd0"))
+	draw_string(ThemeDB.fallback_font,Vector2(90,770),"Цена секции: "+str(RAIL_COST)+" мон. • пункт выгрузки: "+str(UNLOAD_STATION_COST)+" мон.",HORIZONTAL_ALIGNMENT_LEFT,540,15,Color("#d8b96d"))
+
+	draw_menu_button(back_rect(),"НАЗАД")
+	if message_time > 0.0:
+		draw_string(ThemeDB.fallback_font,Vector2(55,845),message,HORIZONTAL_ALIGNMENT_CENTER,610,17,Color.WHITE)
 
 func draw_hazard(r: Rect2, kind: String) -> void:
 	if kind == "lava":
