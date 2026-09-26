@@ -1571,7 +1571,7 @@ func draw_hazard(r: Rect2, kind: String) -> void:
 			r.position+Vector2(50,r.size.y)
 		]),Color("#a9b2ba"))
 	else:
-		draw_polygon(PackedVector2Array([
+		draw_colored_polygon(PackedVector2Array([
 			r.position+Vector2(8,46),r.position+Vector2(18,11),
 			r.position+Vector2(29,46),r.position+Vector2(38,19),
 			r.position+Vector2(48,46)
