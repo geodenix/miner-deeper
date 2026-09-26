@@ -18,7 +18,7 @@
     "scaleMode": "linear",
     "sizeOnStartupMode": "adaptWidth",
     "templateSlug": "",
-    "version": "0.5.1",
+    "version": "0.6.0",
     "name": "Miner Deeper GDevelop 3D",
     "description": "Мобильный 3D-прототип шахтёра для GDevelop: движение, кирка, разрушаемые рудные блоки и рюкзак.",
     "author": "Geodenix",
@@ -334,14 +334,74 @@
           "name": "BagCapacity",
           "persistentUuid": "31000000-0000-4000-8000-000000000005",
           "type": "number",
-          "value": 30
+          "value": 50
+        },
+        {
+          "name": "Chunk1Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000001",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk2Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000002",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk3Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000003",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk4Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000004",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk5Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000005",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk6Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000006",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk7Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000007",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk8Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000008",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk9Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000009",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "Chunk10Generated",
+          "persistentUuid": "69000000-0000-4000-8000-000000000010",
+          "type": "number",
+          "value": 0
         }
       ],
       "instances": [
         {
           "angle": 0,
           "customSize": true,
-          "height": 6300,
+          "height": 11900,
           "keepRatio": true,
           "layer": "",
           "locked": true,
@@ -349,7 +409,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000001",
           "width": 1920,
           "x": -320,
-          "y": -4200,
+          "y": -9800,
           "z": -30,
           "zOrder": -30,
           "numberProperties": [],
@@ -361,7 +421,7 @@
         {
           "angle": 0,
           "customSize": true,
-          "height": 6300,
+          "height": 11900,
           "keepRatio": true,
           "layer": "",
           "locked": true,
@@ -369,7 +429,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000002",
           "width": 64,
           "x": -384,
-          "y": -4200,
+          "y": -9800,
           "z": 30,
           "zOrder": 30,
           "numberProperties": [],
@@ -381,7 +441,7 @@
         {
           "angle": 0,
           "customSize": true,
-          "height": 6300,
+          "height": 11900,
           "keepRatio": true,
           "layer": "",
           "locked": true,
@@ -389,7 +449,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000003",
           "width": 64,
           "x": 1536,
-          "y": -4200,
+          "y": -9800,
           "z": 30,
           "zOrder": 30,
           "numberProperties": [],
@@ -409,7 +469,7 @@
           "persistentUuid": "20000000-0000-4000-8000-000000000004",
           "width": 1984,
           "x": -384,
-          "y": -4200,
+          "y": -9800,
           "z": 30,
           "zOrder": 30,
           "numberProperties": [],
@@ -1410,470 +1470,6 @@
           "numberProperties": [],
           "stringProperties": [],
           "initialVariables": []
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 150,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000001",
-          "width": 520,
-          "x": 64,
-          "y": -2100,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 150,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000002",
-          "width": 430,
-          "x": 980,
-          "y": -2100,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 170,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000003",
-          "width": 390,
-          "x": 250,
-          "y": -2600,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 170,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000004",
-          "width": 360,
-          "x": 1040,
-          "y": -2600,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 160,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000005",
-          "width": 500,
-          "x": 64,
-          "y": -3100,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 160,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000006",
-          "width": 480,
-          "x": 930,
-          "y": -3100,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 180,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000007",
-          "width": 360,
-          "x": 300,
-          "y": -3600,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 180,
-          "keepRatio": true,
-          "layer": "",
-          "locked": true,
-          "name": "Obstacle",
-          "persistentUuid": "68000000-0000-4000-8000-000000000008",
-          "width": 350,
-          "x": 1050,
-          "y": -3600,
-          "z": 30,
-          "zOrder": 30,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 170,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000009",
-          "width": 88,
-          "x": 520,
-          "y": -2200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000010",
-          "width": 88,
-          "x": 610,
-          "y": -2200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "CoalBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000011",
-          "width": 88,
-          "x": 700,
-          "y": -2200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000012",
-          "width": 88,
-          "x": 850,
-          "y": -2700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000013",
-          "width": 88,
-          "x": 760,
-          "y": -2700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "IronBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000014",
-          "width": 88,
-          "x": 670,
-          "y": -2700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000015",
-          "width": 88,
-          "x": 500,
-          "y": -3200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000016",
-          "width": 88,
-          "x": 590,
-          "y": -3200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "CoalBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000017",
-          "width": 88,
-          "x": 680,
-          "y": -3200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000018",
-          "width": 88,
-          "x": 860,
-          "y": -3700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "DirtBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000019",
-          "width": 88,
-          "x": 770,
-          "y": -3700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "GoldBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000020",
-          "width": 88,
-          "x": 680,
-          "y": -3700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "MineBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000021",
-          "width": 88,
-          "x": 790,
-          "y": -2200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "MineBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000022",
-          "width": 88,
-          "x": 560,
-          "y": -2700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "MineBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000023",
-          "width": 88,
-          "x": 790,
-          "y": -3200,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
-        },
-        {
-          "angle": 0,
-          "customSize": true,
-          "height": 88,
-          "keepRatio": true,
-          "layer": "",
-          "locked": false,
-          "name": "MineBlock",
-          "persistentUuid": "68000000-0000-4000-8000-000000000024",
-          "width": 88,
-          "x": 570,
-          "y": -3700,
-          "zOrder": 48,
-          "numberProperties": [],
-          "stringProperties": [],
-          "initialVariables": [],
-          "depth": 88,
-          "customDepth": true
         }
       ],
       "objects": [
@@ -2630,7 +2226,7 @@
           "variables": [],
           "effects": [],
           "behaviors": [],
-          "string": "РЮКЗАК: 0/30",
+          "string": "РЮКЗАК: 0/50",
           "font": "",
           "characterSize": 28,
           "color": {
@@ -2670,9 +2266,9 @@
           "variables": [],
           "effects": [],
           "behaviors": [],
-          "string": "КОПАЙ ГЛУБЖЕ • РУДА СПРЯТАНА В ЗЕМЛЕ",
+          "string": "КОПАЙ ВНИЗ • ПРОЙДЕННЫЕ УЧАСТКИ НЕ ПЕРЕСТРАИВАЮТСЯ",
           "font": "",
-          "characterSize": 16,
+          "characterSize": 15,
           "color": {
             "r": 235,
             "g": 235,
@@ -3123,6 +2719,1469 @@
                     "max(16, SceneWindowWidth()/2 - MineHint.Width()/2)",
                     "=",
                     "28"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "colorB": 90,
+          "colorG": 130,
+          "colorR": 120,
+          "creationTime": 0,
+          "folded": false,
+          "name": "Persistent depth chunks",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "parameters": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-1750"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk1Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-2050",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-2050",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-2050",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "360",
+                    "-2170",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "270",
+                    "-2170",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "CoalBlock",
+                    "180",
+                    "-2170",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "180",
+                    "-2260",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-2350",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-2380",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk1Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-2350"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk2Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-2650",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-2650",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-2650",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "920",
+                    "-2770",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1010",
+                    "-2770",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "CoalBlock",
+                    "1100",
+                    "-2770",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1100",
+                    "-2860",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-2950",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-2980",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk2Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-2950"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk3Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-3250",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-3250",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-3250",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "360",
+                    "-3370",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "270",
+                    "-3370",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "IronBlock",
+                    "180",
+                    "-3370",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "180",
+                    "-3460",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-3550",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-3580",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk3Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-3550"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk4Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-3850",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-3850",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-3850",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "920",
+                    "-3970",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1010",
+                    "-3970",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "CoalBlock",
+                    "1100",
+                    "-3970",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1100",
+                    "-4060",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-4150",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-4180",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk4Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-4150"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk5Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-4450",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-4450",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-4450",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "360",
+                    "-4570",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "270",
+                    "-4570",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "IronBlock",
+                    "180",
+                    "-4570",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "180",
+                    "-4660",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-4750",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-4780",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk5Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-4750"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk6Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-5050",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-5050",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-5050",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "920",
+                    "-5170",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1010",
+                    "-5170",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "GoldBlock",
+                    "1100",
+                    "-5170",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1100",
+                    "-5260",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-5350",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-5380",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk6Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-5350"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk7Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-5650",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-5650",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-5650",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "360",
+                    "-5770",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "270",
+                    "-5770",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "CoalBlock",
+                    "180",
+                    "-5770",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "180",
+                    "-5860",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-5950",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-5980",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk7Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-5950"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk8Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-6250",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-6250",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-6250",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "920",
+                    "-6370",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1010",
+                    "-6370",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "IronBlock",
+                    "1100",
+                    "-6370",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1100",
+                    "-6460",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-6550",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-6580",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk8Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-6550"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk9Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-6850",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-6850",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-6850",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "360",
+                    "-6970",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "270",
+                    "-6970",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "GoldBlock",
+                    "180",
+                    "-6970",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "180",
+                    "-7060",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-7150",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-7180",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk9Generated",
+                    "=",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PosY"
+                  },
+                  "parameters": [
+                    "Player",
+                    "<",
+                    "-7150"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk10Generated",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "560",
+                    "-7450",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "650",
+                    "-7450",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "740",
+                    "-7450",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "920",
+                    "-7570",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1010",
+                    "-7570",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "GoldBlock",
+                    "1100",
+                    "-7570",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "1100",
+                    "-7660",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "MineBlock",
+                    "470",
+                    "-7750",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "DirtBlock",
+                    "830",
+                    "-7780",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Chunk10Generated",
+                    "=",
+                    "1"
                   ]
                 }
               ]
