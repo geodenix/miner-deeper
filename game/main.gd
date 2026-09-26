@@ -1482,9 +1482,6 @@ func save_mine() -> void:
 		}
 
 	var torch_data: Array = []
-	if player.y <= 7:
-		draw_surface_factories()
-
 	for tp in torches.keys():
 		torch_data.append({"x":tp.x,"y":tp.y})
 
@@ -1656,7 +1653,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"заводская версия 0.9",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"заводская версия 0.9.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -1684,6 +1681,10 @@ func draw_game() -> void:
 						draw_hazard(r,str(hazards[cell]))
 				else:
 					draw_mine_block(r,block,x,y)
+
+	# Surface facilities are visual world objects and must be drawn during _draw().
+	if player.y <= 8:
+		draw_surface_factories()
 
 	for tp in torches.keys():
 		var torch_pos: Vector2i = tp
@@ -1787,7 +1788,7 @@ func draw_torch(pos: Vector2i) -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.9",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.9.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
@@ -1843,29 +1844,53 @@ func draw_surface_factories() -> void:
 		var x: int = int(data["x"])
 		var ground: Vector2 = tile_pos(x,SURFACE_ROW)
 		var c: Vector2 = ground + Vector2(TILE*0.5,TILE*0.5)
+
 		var body: Color = Color("#4b5154")
+		var roof: Color = Color("#353a3d")
+		var accent: Color = Color("#b2753e")
 		if i == 0:
-			body = Color("#4f4b45")
+			body = Color("#514a41")
+			roof = Color("#37332f")
+			accent = Color("#c39345")
 		elif i == 1:
-			body = Color("#555b60")
+			body = Color("#555d62")
+			roof = Color("#343b40")
+			accent = Color("#aeb7bd")
 		else:
-			body = Color("#444e59")
+			body = Color("#46515b")
+			roof = Color("#313a43")
+			accent = Color("#72a7c7")
 
-		draw_rect(Rect2(c+Vector2(-35,-76),Vector2(70,64)),body)
-		draw_rect(Rect2(c+Vector2(-29,-68),Vector2(58,50)),body.lightened(0.08))
-		draw_rect(Rect2(c+Vector2(-24,-52),Vector2(13,18)),Color("#c99043"))
-		draw_rect(Rect2(c+Vector2(5,-52),Vector2(13,18)),Color("#c99043"))
-		draw_rect(Rect2(c+Vector2(-7,-35),Vector2(15,23)),Color("#262b2e"))
-		draw_rect(Rect2(c+Vector2(19,-104),Vector2(13,31)),Color("#5a5a57"))
-		draw_rect(Rect2(c+Vector2(17,-108),Vector2(17,5)),Color("#34383a"))
+		# Building body.
+		draw_rect(Rect2(c+Vector2(-47,-102),Vector2(94,87)),body.darkened(0.18))
+		draw_rect(Rect2(c+Vector2(-42,-96),Vector2(84,77)),body)
+		draw_rect(Rect2(c+Vector2(-48,-104),Vector2(96,12)),roof)
 
-		var status: Color = Color("#83898c")
+		# Door and industrial windows.
+		draw_rect(Rect2(c+Vector2(-10,-53),Vector2(20,34)),Color("#202529"))
+		draw_rect(Rect2(c+Vector2(-33,-76),Vector2(16,20)),accent.darkened(0.12))
+		draw_rect(Rect2(c+Vector2(18,-76),Vector2(16,20)),accent.darkened(0.12))
+		draw_line(c+Vector2(-25,-76),c+Vector2(-25,-56),accent.lightened(0.25),2.0)
+		draw_line(c+Vector2(26,-76),c+Vector2(26,-56),accent.lightened(0.25),2.0)
+
+		# Chimney / processing stack.
+		draw_rect(Rect2(c+Vector2(23,-140),Vector2(18,38)),Color("#5e6262"))
+		draw_rect(Rect2(c+Vector2(20,-145),Vector2(24,7)),Color("#3d4142"))
+		if factory_processing(i):
+			draw_circle(c+Vector2(33,-154),10,Color(0.55,0.58,0.60,0.32))
+			draw_circle(c+Vector2(40,-166),13,Color(0.55,0.58,0.60,0.20))
+
+		# Status lamp.
+		var status: Color = Color("#858b8f")
 		if factory_ready(i):
-			status = Color("#62cf78")
+			status = Color("#63d77b")
 		elif factory_processing(i):
-			status = Color("#e1ad50")
-		draw_circle(c+Vector2(-24,-87),5,status)
-		draw_string(ThemeDB.fallback_font,c+Vector2(-48,-113),str(data["short"]),HORIZONTAL_ALIGNMENT_CENTER,96,11,Color("#e6e8e9"))
+			status = Color("#e4ad4c")
+		draw_circle(c+Vector2(-34,-113),7,status)
+
+		# Label plate.
+		draw_rect(Rect2(c+Vector2(-51,-132),Vector2(102,23)),Color(0.06,0.07,0.08,0.88))
+		draw_string(ThemeDB.fallback_font,c+Vector2(-48,-115),str(data["short"]),HORIZONTAL_ALIGNMENT_CENTER,96,12,Color("#e8eaeb"))
 
 func draw_factory() -> void:
 	if selected_factory < 0 or selected_factory >= FACTORIES.size():
