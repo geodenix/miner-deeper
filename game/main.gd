@@ -95,6 +95,7 @@ var player: Vector2i = Vector2i(5, SURFACE_ROW)
 var facing: Vector2i = Vector2i.DOWN
 var hp: int = 100
 var coins: int = 0
+var bonus_5000_claimed: bool = false
 var pick_level: int = 1
 var bag_level: int = 1
 var armor_level: int = 1
@@ -183,6 +184,7 @@ var joystick_repeat_timer: float = 0.0
 func _ready() -> void:
 	rng.randomize()
 	load_meta()
+	apply_5000_bonus()
 	mine_loaded = load_mine()
 	if not mine_loaded:
 		generate_mine()
@@ -1973,9 +1975,17 @@ func save_all() -> void:
 	save_meta()
 	save_mine()
 
+func apply_5000_bonus() -> void:
+	if bonus_5000_claimed:
+		return
+	coins += 5000
+	bonus_5000_claimed = true
+	save_meta()
+
 func save_meta() -> void:
 	var data: Dictionary = {
 		"coins":coins,
+		"bonus_5000_claimed":bonus_5000_claimed,
 		"pick_level":pick_level,
 		"bag_level":bag_level,
 		"armor_level":armor_level,
@@ -2017,6 +2027,7 @@ func load_meta() -> void:
 	if typeof(data) != TYPE_DICTIONARY:
 		return
 	coins = int(data.get("coins",0))
+	bonus_5000_claimed = bool(data.get("bonus_5000_claimed",false))
 	pick_level = maxi(1,int(data.get("pick_level",1)))
 	bag_level = maxi(1,int(data.get("bag_level",1)))
 	armor_level = maxi(1,int(data.get("armor_level",1)))
@@ -2295,7 +2306,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"открытая промышленная карта 1.2",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"открытая промышленная карта 1.2.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -2440,7 +2451,7 @@ func draw_torch(pos: Vector2i) -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v1.2",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v1.2.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
