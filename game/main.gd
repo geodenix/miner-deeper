@@ -18,7 +18,37 @@ const JOYSTICK_DEADZONE: float = 28.0
 const JOYSTICK_INITIAL_REPEAT: float = 0.30
 const JOYSTICK_REPEAT: float = 0.18
 
-enum GameState { MENU, PLAY, SHOP, QUESTS, PAUSE, GAME_OVER }
+enum GameState { MENU, PLAY, SHOP, QUESTS, FACTORY, PAUSE, GAME_OVER }
+
+const FACTORIES: Array = [
+	{
+		"name":"УГОЛЬНАЯ ТЭЦ",
+		"short":"ТЭЦ",
+		"x":1,
+		"accepted":["coal"],
+		"prices":{"coal":8},
+		"base_seconds":12.0,
+		"seconds_per_unit":2.0
+	},
+	{
+		"name":"МЕТАЛЛУРГИЧЕСКИЙ ЗАВОД",
+		"short":"МЕТАЛЛ",
+		"x":6,
+		"accepted":["iron"],
+		"prices":{"iron":22},
+		"base_seconds":18.0,
+		"seconds_per_unit":3.0
+	},
+	{
+		"name":"ОБОГАТИТЕЛЬНЫЙ КОМБИНАТ",
+		"short":"КОМБИНАТ",
+		"x":10,
+		"accepted":["gold","diamond","ruby"],
+		"prices":{"gold":65,"diamond":190,"ruby":340},
+		"base_seconds":25.0,
+		"seconds_per_unit":4.0
+	}
+]
 
 var state: GameState = GameState.MENU
 var rng := RandomNumberGenerator.new()
@@ -64,6 +94,16 @@ var battery_capacity: int = 100
 var battery_level: float = 100.0
 var torch_count: int = 2
 var torches: Dictionary = {}
+
+# v0.9 factories and processing economy
+var selected_factory: int = -1
+var factory_storage: Array = [
+	{"coal":0},
+	{"iron":0},
+	{"gold":0,"diamond":0,"ruby":0}
+]
+var factory_finish_time: Array = [0.0,0.0,0.0]
+var factory_pending_payout: Array = [0,0,0]
 
 var inventory: Dictionary = {
 	"coal": 0,
@@ -204,6 +244,15 @@ func shop_torch_rect() -> Rect2:
 func shop_battery_rect() -> Rect2:
 	return Rect2(70, 886, 580, 96)
 
+func factory_ore_rect(slot: int) -> Rect2:
+	return Rect2(70, 260 + slot * 125, 580, 105)
+
+func factory_start_rect() -> Rect2:
+	return Rect2(90, 690, 540, 82)
+
+func factory_claim_rect() -> Rect2:
+	return Rect2(90, 790, 540, 82)
+
 func back_rect() -> Rect2:
 	return Rect2(90, screen_h() - 120, 540, 78)
 
@@ -343,6 +392,120 @@ func upgrade_battery() -> void:
 	battery_level = float(battery_capacity)
 	say("Аккумулятор улучшен до " + str(battery_capacity))
 	save_all()
+
+func nearby_factory_index() -> int:
+	if player.y > SURFACE_ROW:
+		return -1
+	var best: int = -1
+	var best_dist: int = 999
+	for i in range(FACTORIES.size()):
+		var fx: int = int(FACTORIES[i]["x"])
+		var d: int = abs(player.x - fx)
+		if d <= 1 and d < best_dist:
+			best = i
+			best_dist = d
+	return best
+
+func factory_processing(index: int) -> bool:
+	if index < 0 or index >= FACTORIES.size():
+		return false
+	var finish: float = float(factory_finish_time[index])
+	return finish > Time.get_unix_time_from_system()
+
+func factory_ready(index: int) -> bool:
+	if index < 0 or index >= FACTORIES.size():
+		return false
+	var finish: float = float(factory_finish_time[index])
+	return finish > 0.0 and finish <= Time.get_unix_time_from_system() and int(factory_pending_payout[index]) > 0
+
+func factory_seconds_left(index: int) -> int:
+	if not factory_processing(index):
+		return 0
+	return maxi(0,int(ceil(float(factory_finish_time[index]) - Time.get_unix_time_from_system())))
+
+func factory_stored_units(index: int) -> int:
+	var total: int = 0
+	var storage: Dictionary = factory_storage[index]
+	for ore in storage.keys():
+		total += int(storage[ore])
+	return total
+
+func factory_stored_value(index: int) -> int:
+	var total: int = 0
+	var storage: Dictionary = factory_storage[index]
+	var prices: Dictionary = FACTORIES[index]["prices"]
+	for ore in storage.keys():
+		total += int(storage[ore]) * int(prices.get(ore,0))
+	return total
+
+func factory_transfer_all(index: int, ore: String) -> void:
+	if index < 0 or index >= FACTORIES.size():
+		return
+	var accepted: Array = FACTORIES[index]["accepted"]
+	if not accepted.has(ore):
+		say("Этот завод не принимает " + ore_name(ore))
+		return
+	var amount: int = int(inventory.get(ore,0))
+	if amount <= 0:
+		say("В рюкзаке нет: " + ore_name(ore))
+		return
+	var storage: Dictionary = factory_storage[index]
+	storage[ore] = int(storage.get(ore,0)) + amount
+	factory_storage[index] = storage
+	inventory[ore] = 0
+	say("Передано на завод: " + str(amount) + " × " + ore_name(ore))
+	save_all()
+
+func factory_start(index: int) -> void:
+	if index < 0 or index >= FACTORIES.size():
+		return
+	if factory_processing(index):
+		say("Завод уже перерабатывает партию")
+		return
+	if factory_ready(index):
+		say("Сначала забери готовую выплату")
+		return
+	var units: int = factory_stored_units(index)
+	if units <= 0:
+		say("Склад завода пуст")
+		return
+	var payout: int = factory_stored_value(index)
+	var data: Dictionary = FACTORIES[index]
+	var seconds: float = float(data["base_seconds"]) + float(units) * float(data["seconds_per_unit"])
+	seconds = minf(seconds,180.0)
+	factory_pending_payout[index] = payout
+	factory_finish_time[index] = Time.get_unix_time_from_system() + seconds
+	var storage: Dictionary = factory_storage[index]
+	for ore in storage.keys():
+		storage[ore] = 0
+	factory_storage[index] = storage
+	say("Переработка запущена • " + str(int(ceil(seconds))) + " сек.")
+	save_all()
+
+func factory_claim(index: int) -> void:
+	if index < 0 or index >= FACTORIES.size():
+		return
+	if factory_processing(index):
+		say("Партия ещё перерабатывается")
+		return
+	if not factory_ready(index):
+		say("Готовой выплаты пока нет")
+		return
+	var payout: int = int(factory_pending_payout[index])
+	coins += payout
+	factory_pending_payout[index] = 0
+	factory_finish_time[index] = 0.0
+	say("Завод выплатил +" + str(payout) + " монет")
+	save_all()
+
+func open_nearby_factory() -> void:
+	var idx: int = nearby_factory_index()
+	if idx < 0:
+		say("Подойди ближе к заводу")
+		return
+	release_joystick()
+	selected_factory = idx
+	state = GameState.FACTORY
 
 func cashout_multiplier() -> float:
 	var tiers: int = int(run_max_depth / 20)
@@ -515,7 +678,7 @@ func handle_back() -> void:
 	release_joystick()
 	if state == GameState.PLAY:
 		state = GameState.PAUSE
-	elif state in [GameState.SHOP, GameState.QUESTS, GameState.PAUSE]:
+	elif state in [GameState.SHOP, GameState.QUESTS, GameState.FACTORY, GameState.PAUSE]:
 		state = GameState.PLAY
 	queue_redraw()
 
@@ -565,6 +728,24 @@ func handle_touch(pos: Vector2) -> void:
 		queue_redraw()
 		return
 
+	if state == GameState.FACTORY:
+		if selected_factory >= 0 and selected_factory < FACTORIES.size():
+			var accepted: Array = FACTORIES[selected_factory]["accepted"]
+			for slot in range(accepted.size()):
+				if factory_ore_rect(slot).has_point(pos):
+					factory_transfer_all(selected_factory,str(accepted[slot]))
+					queue_redraw()
+					return
+			if factory_start_rect().has_point(pos):
+				factory_start(selected_factory)
+			elif factory_claim_rect().has_point(pos):
+				factory_claim(selected_factory)
+			elif back_rect().has_point(pos):
+				selected_factory = -1
+				state = GameState.PLAY
+		queue_redraw()
+		return
+
 	if state == GameState.GAME_OVER:
 		if game_over_rect().has_point(pos):
 			respawn()
@@ -596,7 +777,10 @@ func handle_touch(pos: Vector2) -> void:
 		else:
 			use_potion()
 	elif light_rect().has_point(pos):
-		toggle_flashlight()
+		if player.y <= SURFACE_ROW:
+			open_nearby_factory()
+		else:
+			toggle_flashlight()
 	queue_redraw()
 
 func generate_mine() -> void:
@@ -789,13 +973,12 @@ func try_move(dir: Vector2i) -> void:
 			return
 
 	if player.y <= SURFACE_ROW:
-		sell_all()
 		settle_contract()
 		hp = max_hp()
 		battery_level = float(battery_capacity)
 		flashlight_on = true
 		if message_time <= 0.0:
-			say("Поверхность: здоровье и аккумулятор восстановлены")
+			say("Поверхность: отвези добычу на нужный завод")
 
 	finish_turn()
 
@@ -1231,7 +1414,10 @@ func save_meta() -> void:
 		"quest_index":quest_index,
 		"potions":potions,
 		"battery_capacity":battery_capacity,
-		"torch_count":torch_count
+		"torch_count":torch_count,
+		"factory_storage":factory_storage,
+		"factory_finish_time":factory_finish_time,
+		"factory_pending_payout":factory_pending_payout
 	}
 	var f := FileAccess.open(META_SAVE, FileAccess.WRITE)
 	if f:
@@ -1260,6 +1446,16 @@ func load_meta() -> void:
 	torch_count = maxi(0,int(data.get("torch_count",2)))
 	battery_level = float(battery_capacity)
 
+	var loaded_storage = data.get("factory_storage",factory_storage)
+	if typeof(loaded_storage) == TYPE_ARRAY and loaded_storage.size() == FACTORIES.size():
+		factory_storage = loaded_storage
+	var loaded_finish = data.get("factory_finish_time",factory_finish_time)
+	if typeof(loaded_finish) == TYPE_ARRAY and loaded_finish.size() == FACTORIES.size():
+		factory_finish_time = loaded_finish
+	var loaded_payout = data.get("factory_pending_payout",factory_pending_payout)
+	if typeof(loaded_payout) == TYPE_ARRAY and loaded_payout.size() == FACTORIES.size():
+		factory_pending_payout = loaded_payout
+
 func save_mine() -> void:
 	if world.size() != ROWS:
 		return
@@ -1286,6 +1482,9 @@ func save_mine() -> void:
 		}
 
 	var torch_data: Array = []
+	if player.y <= 7:
+		draw_surface_factories()
+
 	for tp in torches.keys():
 		torch_data.append({"x":tp.x,"y":tp.y})
 
@@ -1442,6 +1641,8 @@ func _draw() -> void:
 			draw_shop()
 		GameState.QUESTS:
 			draw_quests()
+		GameState.FACTORY:
+			draw_factory()
 		GameState.PAUSE:
 			draw_game()
 			draw_pause()
@@ -1455,7 +1656,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"шахтная версия 0.8.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"заводская версия 0.9",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -1586,7 +1787,7 @@ func draw_torch(pos: Vector2i) -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.8.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.9",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
@@ -1617,7 +1818,11 @@ func draw_controls() -> void:
 	draw_action_button(tnt_rect(),("КУПИТЬ TNT • 35" if player.y <= SURFACE_ROW else "TNT • "+str(tnt)),true,Color("#783d38"))
 	draw_action_button(shop_rect(),("МАГАЗИН" if player.y <= SURFACE_ROW else "ПОСТАВИТЬ ФАКЕЛ • "+str(torch_count)),true,Color("#554431"))
 	draw_action_button(quests_rect(),("ЗАДАНИЯ" if player.y <= SURFACE_ROW else "АПТЕЧКА • "+str(potions)),true,Color("#315f43"))
-	draw_action_button(light_rect(),("ФОНАРЬ ЗАРЯЖЕН" if player.y <= SURFACE_ROW else ("ФОНАРЬ: ВЫКЛ" if flashlight_on else "ФОНАРЬ: ВКЛ")),player.y > SURFACE_ROW,Color("#5b5635"))
+	var near_factory: int = nearby_factory_index()
+	var factory_label: String = "ЗАВОД • ПОДОЙДИ"
+	if near_factory >= 0:
+		factory_label = "ОТКРЫТЬ • " + str(FACTORIES[near_factory]["short"])
+	draw_action_button(light_rect(),factory_label if player.y <= SURFACE_ROW else ("ФОНАРЬ: ВЫКЛ" if flashlight_on else "ФОНАРЬ: ВКЛ"),near_factory >= 0 if player.y <= SURFACE_ROW else true,Color("#5b5635"))
 
 func draw_joystick() -> void:
 	var c: Vector2 = joystick_center()
@@ -1631,6 +1836,78 @@ func draw_joystick() -> void:
 	draw_circle(knob,35.0,Color("#64776b"))
 	draw_circle(knob-Vector2(8,8),8.0,Color(1,1,1,0.10))
 	draw_string(ThemeDB.fallback_font,Vector2(c.x-80,c.y+145),"ДВИЖЕНИЕ",HORIZONTAL_ALIGNMENT_CENTER,160,14,Color("#aeb8b1"))
+
+func draw_surface_factories() -> void:
+	for i in range(FACTORIES.size()):
+		var data: Dictionary = FACTORIES[i]
+		var x: int = int(data["x"])
+		var ground: Vector2 = tile_pos(x,SURFACE_ROW)
+		var c: Vector2 = ground + Vector2(TILE*0.5,TILE*0.5)
+		var body: Color = Color("#4b5154")
+		if i == 0:
+			body = Color("#4f4b45")
+		elif i == 1:
+			body = Color("#555b60")
+		else:
+			body = Color("#444e59")
+
+		draw_rect(Rect2(c+Vector2(-35,-76),Vector2(70,64)),body)
+		draw_rect(Rect2(c+Vector2(-29,-68),Vector2(58,50)),body.lightened(0.08))
+		draw_rect(Rect2(c+Vector2(-24,-52),Vector2(13,18)),Color("#c99043"))
+		draw_rect(Rect2(c+Vector2(5,-52),Vector2(13,18)),Color("#c99043"))
+		draw_rect(Rect2(c+Vector2(-7,-35),Vector2(15,23)),Color("#262b2e"))
+		draw_rect(Rect2(c+Vector2(19,-104),Vector2(13,31)),Color("#5a5a57"))
+		draw_rect(Rect2(c+Vector2(17,-108),Vector2(17,5)),Color("#34383a"))
+
+		var status: Color = Color("#83898c")
+		if factory_ready(i):
+			status = Color("#62cf78")
+		elif factory_processing(i):
+			status = Color("#e1ad50")
+		draw_circle(c+Vector2(-24,-87),5,status)
+		draw_string(ThemeDB.fallback_font,c+Vector2(-48,-113),str(data["short"]),HORIZONTAL_ALIGNMENT_CENTER,96,11,Color("#e6e8e9"))
+
+func draw_factory() -> void:
+	if selected_factory < 0 or selected_factory >= FACTORIES.size():
+		state = GameState.PLAY
+		return
+	var data: Dictionary = FACTORIES[selected_factory]
+	draw_screen_bg(str(data["name"]))
+	draw_string(ThemeDB.fallback_font,Vector2(0,142),"РЮКЗАК → СКЛАД → ПЕРЕРАБОТКА → ДЕНЬГИ",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,16,Color("#c9d0d5"))
+
+	var accepted: Array = data["accepted"]
+	var prices: Dictionary = data["prices"]
+	for slot in range(accepted.size()):
+		var ore: String = str(accepted[slot])
+		var r: Rect2 = factory_ore_rect(slot)
+		var storage: Dictionary = factory_storage[selected_factory]
+		draw_rect(r,Color("#232c31"))
+		draw_rect(r.grow(-3),Color("#465057"),false,2)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,31),ore_name(ore).to_upper(),HORIZONTAL_ALIGNMENT_LEFT,180,20,Color.WHITE)
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,61),"В рюкзаке: "+str(int(inventory.get(ore,0)))+"  •  На складе: "+str(int(storage.get(ore,0))),HORIZONTAL_ALIGNMENT_LEFT,360,15,Color("#c7ced3"))
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(18,87),str(int(prices.get(ore,0)))+" мон. после переработки",HORIZONTAL_ALIGNMENT_LEFT,300,14,Color("#e2bd61"))
+		draw_rect(Rect2(r.position+Vector2(390,18),Vector2(165,68)),Color("#554431"))
+		draw_string(ThemeDB.fallback_font,r.position+Vector2(390,58),"ПЕРЕЛОЖИТЬ ВСЁ",HORIZONTAL_ALIGNMENT_CENTER,165,13,Color.WHITE)
+
+	var stored: int = factory_stored_units(selected_factory)
+	var value: int = factory_stored_value(selected_factory)
+	draw_string(ThemeDB.fallback_font,Vector2(80,650),"На складе: "+str(stored)+" ед.  •  будущая выплата: "+str(value)+" мон.",HORIZONTAL_ALIGNMENT_LEFT,560,18,Color("#e5d8ae"))
+
+	if factory_processing(selected_factory):
+		draw_menu_button(factory_start_rect(),"ПЕРЕРАБОТКА • "+str(factory_seconds_left(selected_factory))+" сек.")
+	else:
+		draw_menu_button(factory_start_rect(),"ЗАПУСТИТЬ ПЕРЕРАБОТКУ")
+
+	if factory_ready(selected_factory):
+		draw_menu_button(factory_claim_rect(),"ЗАБРАТЬ "+str(int(factory_pending_payout[selected_factory]))+" МОНЕТ")
+	elif factory_processing(selected_factory):
+		draw_menu_button(factory_claim_rect(),"ПАРТИЯ ЕЩЁ НЕ ГОТОВА")
+	else:
+		draw_menu_button(factory_claim_rect(),"ГОТОВОЙ ВЫПЛАТЫ НЕТ")
+
+	draw_menu_button(back_rect(),"НАЗАД")
+	if message_time > 0.0:
+		draw_string(ThemeDB.fallback_font,Vector2(55,915),message,HORIZONTAL_ALIGNMENT_CENTER,610,17,Color.WHITE)
 
 func draw_hazard(r: Rect2, kind: String) -> void:
 	if kind == "lava":
