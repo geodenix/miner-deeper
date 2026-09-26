@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="miner-deeper-build" content="ef3266f43ba0">
+    <meta charset="UTF-8"/>
+    <link rel="manifest" href="manifest.webmanifest?build=ef3266f43ba0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="theme-color" content="#000000" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: #000000;
+            overflow: hidden;
+		}
+        #canvasArea {
+            margin-left: auto;
+            margin-right: auto;
+            overflow: hidden;
+        }
+
+        
+	</style>
+    <!-- Libs and GDJS core files : -->
+		<script src="libs/jshashtable.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="logger.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gd.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="libs/rbush.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="AsyncTasksManager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="inputmanager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="jsonmanager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Model3DManager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="ResourceLoader.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="ResourceCache.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="timemanager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="polygon.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="runtimeobject.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="profiler.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="RuntimeInstanceContainer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="runtimescene.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="scenestack.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="force.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="RuntimeLayer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="layer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="RuntimeCustomObjectLayer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="timer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="runtimewatermark.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="runtimegame.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="variable.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="variablescontainer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="oncetriggers.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="runtimebehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="SpriteAnimator.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="spriteruntimeobject.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="affinetransformation.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="CustomRuntimeObjectInstanceContainer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="CustomRuntimeObject.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="CustomRuntimeObject2D.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="indexeddb.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/commontools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/variabletools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/runtimescenetools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/inputtools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/objecttools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/cameratools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/soundtools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/storagetools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/stringtools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/windowtools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="events-tools/networktools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="splash/gd-logo-light.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/three.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/ThreeAddons.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/Scene3DTools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/A_RuntimeObject3D.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/A_RuntimeObject3DRenderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/CustomRuntimeObject3D.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/CustomRuntimeObject3DRenderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/pixi.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/pixi-filters-tools.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/runtimegame-pixi-renderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/runtimescene-pixi-renderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/layer-pixi-renderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/pixi-image-manager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/pixi-bitmapfont-manager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/spriteruntimeobject-pixi-renderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/CustomRuntimeObject2DPixiRenderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/DebuggerPixiRenderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/loadingscreen-pixi-renderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="pixi-renderers/pixi-effects-manager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="howler-sound-manager/howler.min.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="howler-sound-manager/howler-sound-manager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="fontfaceobserver-font-manager/fontfaceobserver.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="fontfaceobserver-font-manager/fontfaceobserver-font-manager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__buttonstates__buttonfsm.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__buttonstates__buttonscaletween.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__areincollision-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__arewithindistance-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__definehelperclasses-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__distance-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__distancetoposition-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__onfirstsceneloaded-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__picknearest-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__separatefromobjects-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__sqdistance-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__collision3d__sqdistancetoposition-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__exitpointerlock-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__isemulatingpointerlock-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__ismoving-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__ispointeractuallylocked-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__ispointerlocked-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__movementx-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__movementy-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__onfirstsceneloaded-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__onscenepostevents-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__requestpointerlock-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__setmovementx-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__setmovementy-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__settouchspeedfactor-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__touchspeedfactor-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__touchx-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__mousepointerlock__touchy-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__physicscharacter3dkeymapper__platformer3dkeyboardmapper.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__acceleratedspeed-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__angleto4way-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__angleto8way-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__deadzone-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__hastouchstartedonscreenside-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isanglein4waydirection-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isanglein8waydirection-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isbuttonjustpressed-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isbuttonpressed-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isbuttonreleased-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isdirectionpushed4way-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isdirectionpushed8way-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__isingameedition-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__joystickangle-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__joystickforce-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__multitouchbutton.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__multitouchjoystick.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__platformer3dmultitouchmapper.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__setbuttonstate-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__setdeadzone-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__setjoystickangle-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__setjoystickforce-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__spritemultitouchjoystick.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__stickangle-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__stickforce-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__stickforcex-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritemultitouchjoystick__stickforcey-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritetoggleswitch__buttonfsm.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritetoggleswitch__isingameedition-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritetoggleswitch__spritetoggleswitch.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__spritetoggleswitch__switchfsm.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__thirdpersoncamera__lookfromdistanceatobject-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__thirdpersoncamera__lookfromdistanceatobject3d-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__thirdpersoncamera__lookfromdistanceatposition-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__thirdpersoncamera__lookfromdistanceatposition3d-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__thirdpersoncamera__rotatedx-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__thirdpersoncamera__rotatedy-func.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="gdjs-evtsext__thirdpersoncamera__thirdpersoncamera.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/Base3DBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/Cube3DRuntimeObject.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/Cube3DRuntimeObjectPixiRenderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/Physics3DBehavior/PhysicsCharacter3DRuntimeBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/TextObject/textruntimeobject-pixi-renderer.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/TextObject/textruntimeobject.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/TweenBehavior/TweenManager.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/TweenBehavior/tweenruntimebehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="object-capabilities/AnimatableBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="object-capabilities/EffectBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="object-capabilities/FlippableBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="object-capabilities/OpacityBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="object-capabilities/ResizableBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="object-capabilities/ScalableBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="object-capabilities/TextContainerBehavior.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/AmbientLight.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="Extensions/3D/DirectionalLight.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="code0.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+	<script src="data.js?build=ef3266f43ba0" crossorigin="anonymous"></script>
+
+
+</head>
+<body>
+
+    
+	<script>
+
+    (function() {
+        //Initialization
+        var game = new gdjs.RuntimeGame(gdjs.projectData, gdjs.runtimeGameOptions);
+
+        //Create a renderer
+        game.getRenderer().createStandardCanvas(document.body);
+
+        //Bind keyboards/mouse/touch events
+        game.getRenderer().bindStandardEvents(game.getInputManager(), window, document);
+
+        //Load all assets and start the game
+        game.loadAllAssets(function() {
+            game.startGameLoop();
+        });
+    })();
+
+	</script>
+</body>
+</html>

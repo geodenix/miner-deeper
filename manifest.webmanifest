@@ -1,0 +1,12 @@
+{
+  "name": "Miner Deeper GDevelop 3D",
+  "short_name": "Miner Deeper GDevelop 3D",
+  "id": "com.geodenix.minerdeeper.gdevelop",
+  "description": "Мобильный 3D-прототип шахтёра для GDevelop: движение, кирка, разрушаемые рудные блоки и рюкзак.",
+  "orientation": "landscape",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "black",
+  "categories": ["games", "entertainment"],
+  "icons": []
+}
