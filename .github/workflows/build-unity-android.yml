@@ -1,0 +1,64 @@
+name: Build Unity Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'unity3d/**'
+      - '.github/workflows/build-unity-android.yml'
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Unity secrets
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [ -z "$UNITY_LICENSE" ] || [ -z "$UNITY_EMAIL" ] || [ -z "$UNITY_PASSWORD" ]; then
+            echo "::error::Unity Personal secrets are not configured yet."
+            echo "Add UNITY_LICENSE, UNITY_EMAIL and UNITY_PASSWORD in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: unity3d/Library
+          key: unity3d-library-6000.3.10f1-android-${{ hashFiles('unity3d/Assets/**', 'unity3d/Packages/**', 'unity3d/ProjectSettings/**') }}
+          restore-keys: |
+            unity3d-library-6000.3.10f1-android-
+
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity3d
+          unityVersion: 6000.3.10f1
+          targetPlatform: Android
+          buildMethod: MinerDeeper.Editor.UnityBuild.BuildAndroid
+          androidExportType: androidPackage
+          versioning: None
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: miner-deeper-unity-android-prototype
+          path: unity3d/Builds/Android/*.apk
+          if-no-files-found: error
+          retention-days: 14
