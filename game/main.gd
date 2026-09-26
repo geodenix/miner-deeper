@@ -13,6 +13,10 @@ const MINE_SAVE: String = "user://mine_v06.json"
 const FLASHLIGHT_RADIUS: int = 5
 const TORCH_RADIUS: int = 3
 const FLASHLIGHT_DRAIN: float = 1.0
+const JOYSTICK_RADIUS: float = 108.0
+const JOYSTICK_DEADZONE: float = 28.0
+const JOYSTICK_INITIAL_REPEAT: float = 0.30
+const JOYSTICK_REPEAT: float = 0.18
 
 enum GameState { MENU, PLAY, SHOP, QUESTS, PAUSE, GAME_OVER }
 
@@ -72,6 +76,13 @@ var inventory: Dictionary = {
 var message: String = ""
 var message_time: float = 0.0
 
+# Virtual joystick
+var joystick_active: bool = false
+var joystick_touch_index: int = -1
+var joystick_offset: Vector2 = Vector2.ZERO
+var joystick_dir: Vector2i = Vector2i.ZERO
+var joystick_repeat_timer: float = 0.0
+
 func _ready() -> void:
 	rng.randomize()
 	load_meta()
@@ -91,6 +102,11 @@ func _notification(what: int) -> void:
 func _process(delta: float) -> void:
 	if message_time > 0.0:
 		message_time -= delta
+	if state == GameState.PLAY and joystick_active and joystick_dir != Vector2i.ZERO:
+		joystick_repeat_timer -= delta
+		if joystick_repeat_timer <= 0.0:
+			try_move(joystick_dir)
+			joystick_repeat_timer = JOYSTICK_REPEAT
 	queue_redraw()
 
 func screen_h() -> float:
@@ -101,6 +117,38 @@ func control_top() -> float:
 
 func mine_center_y() -> float:
 	return (TOP_H + control_top()) * 0.5
+
+func joystick_center() -> Vector2:
+	return Vector2(230.0, control_top() + 220.0)
+
+func joystick_hit(pos: Vector2) -> bool:
+	return pos.distance_to(joystick_center()) <= JOYSTICK_RADIUS + 34.0
+
+func joystick_direction(offset: Vector2) -> Vector2i:
+	if offset.length() < JOYSTICK_DEADZONE:
+		return Vector2i.ZERO
+	if abs(offset.x) > abs(offset.y):
+		return Vector2i.RIGHT if offset.x > 0.0 else Vector2i.LEFT
+	return Vector2i.DOWN if offset.y > 0.0 else Vector2i.UP
+
+func update_joystick(pos: Vector2, immediate_on_change: bool) -> void:
+	var raw: Vector2 = pos - joystick_center()
+	if raw.length() > JOYSTICK_RADIUS:
+		raw = raw.normalized() * JOYSTICK_RADIUS
+	joystick_offset = raw
+	var new_dir: Vector2i = joystick_direction(raw)
+	if new_dir != joystick_dir:
+		joystick_dir = new_dir
+		joystick_repeat_timer = JOYSTICK_INITIAL_REPEAT
+		if immediate_on_change and joystick_dir != Vector2i.ZERO:
+			try_move(joystick_dir)
+
+func release_joystick() -> void:
+	joystick_active = false
+	joystick_touch_index = -1
+	joystick_offset = Vector2.ZERO
+	joystick_dir = Vector2i.ZERO
+	joystick_repeat_timer = 0.0
 
 func left_rect() -> Rect2:
 	return Rect2(28, control_top() + 178, 126, 126)
@@ -414,10 +462,31 @@ func use_potion() -> void:
 	finish_turn()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventScreenTouch and event.pressed:
-		handle_touch(event.position)
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		handle_touch(event.position)
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			if state == GameState.PLAY and joystick_hit(event.position) and not joystick_active:
+				joystick_active = true
+				joystick_touch_index = event.index
+				update_joystick(event.position,true)
+			else:
+				handle_touch(event.position)
+		elif event.index == joystick_touch_index:
+			release_joystick()
+	elif event is InputEventScreenDrag:
+		if joystick_active and event.index == joystick_touch_index:
+			update_joystick(event.position,true)
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			if state == GameState.PLAY and joystick_hit(event.position):
+				joystick_active = true
+				joystick_touch_index = -2
+				update_joystick(event.position,true)
+			else:
+				handle_touch(event.position)
+		elif joystick_touch_index == -2:
+			release_joystick()
+	elif event is InputEventMouseMotion and joystick_touch_index == -2:
+		update_joystick(event.position,true)
 	elif event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			handle_back()
@@ -443,6 +512,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				place_torch()
 
 func handle_back() -> void:
+	release_joystick()
 	if state == GameState.PLAY:
 		state = GameState.PAUSE
 	elif state in [GameState.SHOP, GameState.QUESTS, GameState.PAUSE]:
@@ -505,16 +575,9 @@ func handle_touch(pos: Vector2) -> void:
 		return
 
 	if pause_rect().has_point(pos):
+		release_joystick()
 		save_all()
 		state = GameState.PAUSE
-	elif left_rect().has_point(pos):
-		try_move(Vector2i.LEFT)
-	elif right_rect().has_point(pos):
-		try_move(Vector2i.RIGHT)
-	elif up_rect().has_point(pos):
-		try_move(Vector2i.UP)
-	elif down_rect().has_point(pos):
-		try_move(Vector2i.DOWN)
 	elif attack_rect().has_point(pos):
 		attack()
 	elif tnt_rect().has_point(pos):
@@ -1392,7 +1455,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"шахтная версия 0.8",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"шахтная версия 0.8.1",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -1523,7 +1586,7 @@ func draw_torch(pos: Vector2i) -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.8",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.8.1",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
@@ -1549,15 +1612,25 @@ func draw_hud() -> void:
 func draw_controls() -> void:
 	var top: float = control_top()
 	draw_rect(Rect2(0,top,BASE_W,BOTTOM_H),Color(0.04,0.05,0.07,0.97))
-	draw_move_button(left_rect(),"←")
-	draw_move_button(right_rect(),"→")
-	draw_move_button(up_rect(),"↑")
-	draw_move_button(down_rect(),"↓")
+	draw_joystick()
 	draw_action_button(attack_rect(),"УДАР / КИРКА",true,Color("#8a542d"))
 	draw_action_button(tnt_rect(),("КУПИТЬ TNT • 35" if player.y <= SURFACE_ROW else "TNT • "+str(tnt)),true,Color("#783d38"))
 	draw_action_button(shop_rect(),("МАГАЗИН" if player.y <= SURFACE_ROW else "ПОСТАВИТЬ ФАКЕЛ • "+str(torch_count)),true,Color("#554431"))
 	draw_action_button(quests_rect(),("ЗАДАНИЯ" if player.y <= SURFACE_ROW else "АПТЕЧКА • "+str(potions)),true,Color("#315f43"))
 	draw_action_button(light_rect(),("ФОНАРЬ ЗАРЯЖЕН" if player.y <= SURFACE_ROW else ("ФОНАРЬ: ВЫКЛ" if flashlight_on else "ФОНАРЬ: ВКЛ")),player.y > SURFACE_ROW,Color("#5b5635"))
+
+func draw_joystick() -> void:
+	var c: Vector2 = joystick_center()
+	draw_circle(c,JOYSTICK_RADIUS,Color(0.08,0.10,0.09,0.96))
+	draw_arc(c,JOYSTICK_RADIUS-3.0,0.0,TAU,48,Color("#59685f"),4.0)
+	draw_arc(c,JOYSTICK_DEADZONE,0.0,TAU,32,Color(0.45,0.50,0.47,0.32),2.0)
+	draw_line(c+Vector2(-JOYSTICK_RADIUS+18,0),c+Vector2(JOYSTICK_RADIUS-18,0),Color(0.35,0.40,0.37,0.18),2.0)
+	draw_line(c+Vector2(0,-JOYSTICK_RADIUS+18),c+Vector2(0,JOYSTICK_RADIUS-18),Color(0.35,0.40,0.37,0.18),2.0)
+	var knob: Vector2 = c + joystick_offset
+	draw_circle(knob,42.0,Color("#46594e"))
+	draw_circle(knob,35.0,Color("#64776b"))
+	draw_circle(knob-Vector2(8,8),8.0,Color(1,1,1,0.10))
+	draw_string(ThemeDB.fallback_font,Vector2(c.x-80,c.y+145),"ДВИЖЕНИЕ",HORIZONTAL_ALIGNMENT_CENTER,160,14,Color("#aeb8b1"))
 
 func draw_hazard(r: Rect2, kind: String) -> void:
 	if kind == "lava":
