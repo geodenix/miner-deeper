@@ -1260,6 +1260,12 @@ func draw_move_button(r: Rect2, label: String) -> void:
 	draw_rect(r.grow(-4),Color("#4c7b5f"),false,3)
 	draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y*0.5+17),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,42,Color.WHITE)
 
+func draw_small_button(r: Rect2, label: String, enabled: bool) -> void:
+	var c: Color = Color("#315f43") if enabled else Color("#33383d")
+	draw_rect(r,c)
+	draw_rect(r.grow(-3),c.lightened(0.16),false,2)
+	draw_string(ThemeDB.fallback_font,r.position+Vector2(0,r.size.y*0.5+6),label,HORIZONTAL_ALIGNMENT_CENTER,r.size.x,14,Color.WHITE)
+
 func draw_action_button(r: Rect2, label: String, enabled: bool, base_color: Color) -> void:
 	var c: Color = base_color if enabled else Color("#33383d")
 	draw_rect(r,c)
