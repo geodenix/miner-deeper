@@ -86,7 +86,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: miner-deeper-v0.7-playable-apk
+          name: miner-deeper-v0.8-mine-light-apk
           path: ${{ steps.export.outputs.build_directory }}/**/*.apk
           if-no-files-found: error
           retention-days: 14
