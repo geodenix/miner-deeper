@@ -29,13 +29,27 @@ var hp: int = 100
 var coins: int = 0
 var pick_level: int = 1
 var bag_level: int = 1
-var armor_level: int = 0
+var armor_level: int = 1
 var tnt: int = 2
 var max_depth: int = 0
 var lifetime_ore: int = 0
 var bosses_killed: int = 0
 var quest_index: int = 0
 var turn_count: int = 0
+
+# v0.7 run systems
+var run_max_depth: int = 0
+var run_ore: int = 0
+var run_kills: int = 0
+var combo: int = 0
+var combo_grace: int = 0
+var frenzy_charge: int = 0
+var frenzy_turns: int = 0
+var potions: int = 1
+var contract_type: String = "ore"
+var contract_target: int = 20
+var contract_reward: int = 150
+var contract_paid: bool = false
 
 var inventory: Dictionary = {
 	"coal": 0,
@@ -168,6 +182,123 @@ func bag_price() -> int:
 func armor_price() -> int:
 	return 120 * armor_level * armor_level
 
+func cashout_multiplier() -> float:
+	var tiers: int = int(run_max_depth / 20)
+	return minf(2.50, 1.0 + float(tiers) * 0.15)
+
+func critical_chance() -> float:
+	return minf(0.30, 0.05 + float(pick_level) * 0.025)
+
+func combat_hit_damage() -> Dictionary:
+	var crit: bool = rng.randf() < critical_chance()
+	var damage: int = combat_damage() * (2 if crit else 1)
+	if frenzy_turns > 0:
+		damage = int(round(float(damage) * 1.5))
+	return {"damage":damage,"crit":crit}
+
+func mining_hit_damage() -> Dictionary:
+	var crit: bool = rng.randf() < critical_chance()
+	var damage: int = pick_damage() * (2 if crit else 1)
+	if frenzy_turns > 0:
+		damage += 1
+	return {"damage":damage,"crit":crit}
+
+func roll_contract() -> void:
+	var roll: int = rng.randi_range(0,2)
+	contract_paid = false
+	if roll == 0:
+		contract_type = "ore"
+		contract_target = rng.randi_range(18,30)
+		contract_reward = 140 + contract_target * 4
+	elif roll == 1:
+		contract_type = "kills"
+		contract_target = rng.randi_range(4,7)
+		contract_reward = 180 + contract_target * 20
+	else:
+		contract_type = "depth"
+		contract_target = rng.randi_range(2,4) * 20
+		contract_reward = 160 + contract_target * 4
+
+func contract_progress_value() -> int:
+	if contract_type == "ore":
+		return run_ore
+	if contract_type == "kills":
+		return run_kills
+	return run_max_depth
+
+func contract_complete() -> bool:
+	return contract_progress_value() >= contract_target
+
+func contract_text() -> String:
+	var title: String = "Добыть руду"
+	if contract_type == "kills":
+		title = "Победить врагов"
+	elif contract_type == "depth":
+		title = "Достичь глубины"
+	return title + ": " + str(mini(contract_progress_value(),contract_target)) + "/" + str(contract_target) + "  •  +" + str(contract_reward)
+
+func settle_contract() -> void:
+	if contract_paid or not contract_complete():
+		return
+	coins += contract_reward
+	contract_paid = true
+	say("КОНТРАКТ ВЫПОЛНЕН! +" + str(contract_reward) + " монет")
+
+func add_frenzy(amount: int) -> void:
+	if frenzy_turns > 0:
+		return
+	frenzy_charge = mini(100, frenzy_charge + amount)
+	if frenzy_charge >= 100:
+		frenzy_charge = 0
+		frenzy_turns = 8
+		say("ЗОЛОТАЯ ЛИХОРАДКА! Добыча x2 на 8 ходов")
+
+func add_ore(t: String, base_amount: int = 1) -> int:
+	var space: int = bag_capacity() - bag_used()
+	if space <= 0:
+		return 0
+	var amount: int = base_amount
+	if frenzy_turns > 0:
+		amount *= 2
+	if rng.randf() < 0.12:
+		amount += 1
+	amount = mini(amount, space)
+	inventory[t] = int(inventory[t]) + amount
+	lifetime_ore += amount
+	run_ore += amount
+	combo += 1
+	combo_grace = 2
+	add_frenzy(12 + amount * 2)
+	if combo > 0 and combo % 5 == 0:
+		var bonus: int = combo * 3
+		coins += bonus
+		say("СЕРИЯ x" + str(combo) + "! +" + str(bonus) + " монет")
+	return amount
+
+func open_geode() -> void:
+	var choices: Array[String] = ["iron","gold","diamond","ruby"]
+	var index: int = rng.randi_range(0,choices.size()-1)
+	var ore: String = choices[index]
+	var amount: int = rng.randi_range(1,3)
+	var gained: int = add_ore(ore,amount)
+	if rng.randf() < 0.30:
+		potions += 1
+		say("ГЕОДА: +" + str(gained) + " " + ore_name(ore) + " и аптечка")
+	else:
+		say("ГЕОДА: +" + str(gained) + " " + ore_name(ore))
+
+func use_potion() -> void:
+	if potions <= 0:
+		say("Аптечек нет")
+		return
+	if hp >= max_hp():
+		say("Здоровье уже полное")
+		return
+	potions -= 1
+	hp = mini(max_hp(), hp + 40)
+	say("Аптечка: +40 HP")
+	finish_turn()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch and event.pressed:
 		handle_touch(event.position)
@@ -278,7 +409,7 @@ func handle_touch(pos: Vector2) -> void:
 		if player.y <= SURFACE_ROW:
 			state = GameState.QUESTS
 		else:
-			say("Задания смотри на поверхности")
+			use_potion()
 	queue_redraw()
 
 func generate_mine() -> void:
@@ -323,18 +454,28 @@ func generate_mine() -> void:
 	facing = Vector2i.DOWN
 	hp = max_hp()
 	turn_count = 0
+	run_max_depth = 0
+	run_ore = 0
+	run_kills = 0
+	combo = 0
+	combo_grace = 0
+	frenzy_charge = 0
+	frenzy_turns = 0
+	roll_contract()
 	mine_loaded = true
-	say("Новая шахта создана")
+	say("Новая шахта. Контракт: " + contract_text())
 
 func make_block(depth: int) -> Dictionary:
 	var t: String = "dirt"
 	var r: float = rng.randf()
 
-	if depth > 110 and r < 0.006:
+	if depth > 35 and r < 0.009:
+		t = "geode"
+	elif depth > 110 and r < 0.015:
 		t = "chest_epic"
-	elif depth > 50 and r < 0.012:
+	elif depth > 50 and r < 0.024:
 		t = "chest_rare"
-	elif depth > 12 and r < 0.026:
+	elif depth > 12 and r < 0.044:
 		t = "chest"
 	else:
 		var ore: float = rng.randf()
@@ -385,6 +526,8 @@ func make_block(depth: int) -> Dictionary:
 			block_hp = 5
 		"chest", "chest_rare", "chest_epic":
 			block_hp = 2
+		"geode":
+			block_hp = 3
 
 	return {"type":t,"hp":block_hp,"max_hp":block_hp}
 
@@ -436,18 +579,19 @@ func try_move(dir: Vector2i) -> void:
 	if target.x < 0 or target.x >= COLS or target.y < 0 or target.y >= ROWS:
 		return
 	if enemy_at(target) >= 0:
-		say("Впереди враг — жми УДАР")
+		attack()
 		return
 	if boss.size() > 0 and not boss_defeated and boss["pos"] == target:
-		say("Впереди босс — жми УДАР")
+		attack()
 		return
 	if world[target.y][target.x] != null:
-		say("Впереди порода — жми КИРКА")
+		attack()
 		return
 
 	player = target
 	if player.y > max_depth:
 		max_depth = player.y
+	run_max_depth = maxi(run_max_depth, player.y - SURFACE_ROW)
 
 	if hazards.has(player):
 		resolve_hazard(player)
@@ -456,8 +600,10 @@ func try_move(dir: Vector2i) -> void:
 
 	if player.y <= SURFACE_ROW:
 		sell_all()
+		settle_contract()
 		hp = max_hp()
-		say("На поверхности: добыча продана, здоровье восстановлено")
+		if message_time <= 0.0:
+			say("На поверхности: добыча продана, здоровье восстановлено")
 
 	finish_turn()
 
@@ -469,30 +615,36 @@ func attack() -> void:
 		return
 
 	if boss.size() > 0 and not boss_defeated and boss["pos"] == target:
-		boss["hp"] = int(boss["hp"]) - combat_damage()
+		var hit: Dictionary = combat_hit_damage()
+		boss["hp"] = int(boss["hp"]) - int(hit["damage"])
 		if int(boss["hp"]) <= 0:
 			boss_defeated = true
 			bosses_killed += 1
-			coins += 600
+			run_kills += 1
+			coins += 650
 			tnt += 2
-			say("Босс побеждён! +600 монет и +2 TNT")
+			add_frenzy(30)
+			say("БОСС ПОВЕРЖЕН! +650 монет и +2 TNT")
 		else:
-			say("Урон боссу: " + str(combat_damage()))
+			say(("КРИТ! " if bool(hit["crit"]) else "") + "Урон боссу: " + str(hit["damage"]))
 		finish_turn()
 		return
 
 	var enemy_idx: int = enemy_at(target)
 	if enemy_idx >= 0:
 		var enemy: Dictionary = enemies[enemy_idx]
-		enemy["hp"] = int(enemy["hp"]) - combat_damage()
+		var hit: Dictionary = combat_hit_damage()
+		enemy["hp"] = int(enemy["hp"]) - int(hit["damage"])
 		if int(enemy["hp"]) <= 0:
 			var reward: int = int(enemy["reward"])
 			coins += reward
+			run_kills += 1
+			add_frenzy(20)
 			enemies.remove_at(enemy_idx)
-			say("Враг побеждён: +" + str(reward) + " монет")
+			say(("КРИТ! " if bool(hit["crit"]) else "") + "Враг повержен: +" + str(reward))
 		else:
 			enemies[enemy_idx] = enemy
-			say("Урон врагу: " + str(combat_damage()))
+			say(("КРИТ! " if bool(hit["crit"]) else "") + "Урон: " + str(hit["damage"]))
 		finish_turn()
 		return
 
@@ -506,20 +658,26 @@ func attack() -> void:
 		say("Рюкзак заполнен")
 		return
 
-	block["hp"] = int(block["hp"]) - pick_damage()
+	var mine_hit: Dictionary = mining_hit_damage()
+	block["hp"] = int(block["hp"]) - int(mine_hit["damage"])
 	if int(block["hp"]) <= 0:
 		world[target.y][target.x] = null
 		resolve_broken_block(t)
+		player = target
+		run_max_depth = maxi(run_max_depth, player.y - SURFACE_ROW)
+		max_depth = maxi(max_depth, player.y)
 	else:
 		world[target.y][target.x] = block
-		say("Кирка: -" + str(pick_damage()) + " прочности")
+		say(("КРИТ! " if bool(mine_hit["crit"]) else "") + "Кирка: -" + str(mine_hit["damage"]))
 	finish_turn()
 
 func resolve_broken_block(t: String) -> void:
 	if is_ore(t):
-		inventory[t] = int(inventory[t]) + 1
-		lifetime_ore += 1
-		say("+1 " + ore_name(t))
+		var gained: int = add_ore(t,1)
+		if message_time <= 0.0 or combo % 5 != 0:
+			say("+" + str(gained) + " " + ore_name(t) + "  •  серия x" + str(combo))
+	elif t == "geode":
+		open_geode()
 	elif t.begins_with("chest"):
 		open_chest(t)
 	elif t == "stone":
@@ -541,7 +699,10 @@ func open_chest(t: String) -> void:
 		gain_tnt = 2
 	coins += reward
 	tnt += gain_tnt
-	say("Сундук: +" + str(reward) + " мон., +" + str(gain_tnt) + " TNT")
+	var potion_gain: int = 1 if rng.randf() < (0.55 if t != "chest" else 0.20) else 0
+	potions += potion_gain
+	add_frenzy(15)
+	say("Сундук: +" + str(reward) + " мон., +" + str(gain_tnt) + " TNT" + (" + аптечка" if potion_gain > 0 else ""))
 
 func resolve_hazard(pos: Vector2i) -> void:
 	var kind: String = str(hazards[pos])
@@ -551,14 +712,19 @@ func resolve_hazard(pos: Vector2i) -> void:
 		take_damage(10, "Шипы")
 	else:
 		if bag_used() < bag_capacity() and rng.randf() < 0.45:
-			inventory["diamond"] = int(inventory["diamond"]) + 1
-			lifetime_ore += 1
-			say("Кристальная жила: +1 алмаз")
+			var gained: int = add_ore("diamond",1)
+			say("Кристальная жила: +" + str(gained) + " алмаз")
 		else:
 			take_damage(8, "Кристалл")
 
 func finish_turn() -> void:
 	turn_count += 1
+	if frenzy_turns > 0:
+		frenzy_turns -= 1
+	if combo_grace > 0:
+		combo_grace -= 1
+	elif combo > 0:
+		combo = 0
 	enemies_turn()
 	boss_turn()
 	check_quest_progress()
@@ -585,7 +751,19 @@ func enemies_turn() -> void:
 				return
 			continue
 
-		if dist > 6 or turn_count % 2 != 0:
+		var kind: String = str(e["kind"])
+		if kind == "crystal" and dist == 2 and turn_count % 2 == 0:
+			take_damage(maxi(1,int(e["damage"]) - 4),"Кристальный выстрел")
+			if hp <= 0:
+				return
+			continue
+
+		var cadence: int = 2
+		if kind == "bat":
+			cadence = 1
+		elif kind == "golem":
+			cadence = 3
+		if dist > (8 if kind == "bat" else 6) or turn_count % cadence != 0:
 			continue
 
 		var dirs: Array = []
@@ -670,7 +848,7 @@ func take_damage(amount: int, source: String) -> void:
 	hp = maxi(0, hp - damage)
 	say(source + ": -" + str(damage) + " HP")
 	if hp <= 0:
-		var lost: int = int(coins * 0.12)
+		var lost: int = int(coins * 0.05)
 		coins = maxi(0, coins - lost)
 		for key in inventory.keys():
 			inventory[key] = 0
@@ -712,14 +890,15 @@ func use_tnt() -> void:
 			var ei: int = enemy_at(p)
 			if ei >= 0:
 				coins += int(enemies[ei]["reward"])
+				run_kills += 1
+				add_frenzy(20)
 				enemies.remove_at(ei)
 
 			var block = world[p.y][p.x]
 			if block != null:
 				var t: String = str(block["type"])
 				if is_ore(t) and bag_used() < bag_capacity():
-					inventory[t] = int(inventory[t]) + 1
-					lifetime_ore += 1
+					add_ore(t,1)
 				elif t.begins_with("chest"):
 					open_chest(t)
 				world[p.y][p.x] = null
@@ -736,10 +915,12 @@ func sell_all() -> void:
 	earned += int(inventory["ruby"]) * 180
 	if earned <= 0:
 		return
-	coins += earned
+	var multiplier: float = cashout_multiplier()
+	var payout: int = int(round(float(earned) * multiplier))
+	coins += payout
 	for key in inventory.keys():
 		inventory[key] = 0
-	say("Продано на +" + str(earned) + " монет")
+	say("Продано: +" + str(payout) + "  •  множитель x" + str(snappedf(multiplier,0.05)))
 
 func upgrade_pick() -> void:
 	var price: int = pick_price()
@@ -857,7 +1038,8 @@ func save_meta() -> void:
 		"max_depth":max_depth,
 		"lifetime_ore":lifetime_ore,
 		"bosses_killed":bosses_killed,
-		"quest_index":quest_index
+		"quest_index":quest_index,
+		"potions":potions
 	}
 	var f := FileAccess.open(META_SAVE, FileAccess.WRITE)
 	if f:
@@ -881,6 +1063,7 @@ func load_meta() -> void:
 	lifetime_ore = maxi(0,int(data.get("lifetime_ore",0)))
 	bosses_killed = maxi(0,int(data.get("bosses_killed",0)))
 	quest_index = clampi(int(data.get("quest_index",0)),0,4)
+	potions = maxi(0,int(data.get("potions",1)))
 
 func save_mine() -> void:
 	if world.size() != ROWS:
@@ -917,7 +1100,18 @@ func save_mine() -> void:
 		"facing":{"x":facing.x,"y":facing.y},
 		"hp":hp,
 		"inventory":inventory,
-		"turn_count":turn_count
+		"turn_count":turn_count,
+		"run_max_depth":run_max_depth,
+		"run_ore":run_ore,
+		"run_kills":run_kills,
+		"combo":combo,
+		"combo_grace":combo_grace,
+		"frenzy_charge":frenzy_charge,
+		"frenzy_turns":frenzy_turns,
+		"contract_type":contract_type,
+		"contract_target":contract_target,
+		"contract_reward":contract_reward,
+		"contract_paid":contract_paid
 	}
 	var f := FileAccess.open(MINE_SAVE, FileAccess.WRITE)
 	if f:
@@ -967,6 +1161,17 @@ func load_mine() -> bool:
 	facing = Vector2i(int(fd.get("x",0)),int(fd.get("y",1)))
 	hp = clampi(int(data.get("hp",max_hp())),1,max_hp())
 	turn_count = maxi(0,int(data.get("turn_count",0)))
+	run_max_depth = maxi(0,int(data.get("run_max_depth",maxi(0,player.y-SURFACE_ROW))))
+	run_ore = maxi(0,int(data.get("run_ore",0)))
+	run_kills = maxi(0,int(data.get("run_kills",0)))
+	combo = maxi(0,int(data.get("combo",0)))
+	combo_grace = maxi(0,int(data.get("combo_grace",0)))
+	frenzy_charge = clampi(int(data.get("frenzy_charge",0)),0,100)
+	frenzy_turns = maxi(0,int(data.get("frenzy_turns",0)))
+	contract_type = str(data.get("contract_type","ore"))
+	contract_target = maxi(1,int(data.get("contract_target",20)))
+	contract_reward = maxi(1,int(data.get("contract_reward",150)))
+	contract_paid = bool(data.get("contract_paid",false))
 
 	var inv = data.get("inventory",{})
 	for key in inventory.keys():
@@ -1012,6 +1217,8 @@ func block_color(t: String) -> Color:
 			return Color("#466bb1")
 		"chest_epic":
 			return Color("#8951b3")
+		"geode":
+			return Color("#5f4a83")
 		_:
 			return Color("#6e472b")
 
@@ -1038,7 +1245,7 @@ func draw_menu() -> void:
 	draw_rect(Rect2(0,h-370,BASE_W,370),Color("#573820"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,205),"ШАХТЁР",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,58,Color("#f3c43e"))
 	draw_string(ThemeDB.fallback_font,Vector2(0,268),"ГЛУБЖЕ!",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,52,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(0,320),"полная тестовая версия 0.6",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
+	draw_string(ThemeDB.fallback_font,Vector2(0,320),"arcade-версия 0.7",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,19,Color("#b9c3cc"))
 	draw_menu_button(menu_new_rect(),"НОВАЯ ШАХТА")
 	draw_menu_button(menu_continue_rect(),"ПРОДОЛЖИТЬ")
 	draw_string(ThemeDB.fallback_font,Vector2(0,750),"Рекорд: "+str(maxi(0,max_depth-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_CENTER,BASE_W,23,Color.WHITE)
@@ -1073,6 +1280,9 @@ func draw_game() -> void:
 						draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),8,c.lightened(0.38))
 					if t.begins_with("chest"):
 						draw_chest(r,t)
+					elif t == "geode":
+						draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),13,Color("#b78cff"))
+						draw_circle(r.position+Vector2(TILE*0.5,TILE*0.5),6,Color("#e8dcff"))
 					if int(block["hp"]) < int(block["max_hp"]):
 						var ratio: float = float(block["hp"]) / float(block["max_hp"])
 						draw_rect(Rect2(r.position+Vector2(5,TILE-7),Vector2((TILE-10)*ratio,4)),Color.WHITE)
@@ -1096,20 +1306,26 @@ func draw_game() -> void:
 
 func draw_hud() -> void:
 	draw_rect(Rect2(0,0,BASE_W,TOP_H),Color(0.04,0.05,0.07,0.97))
-	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.6",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,31),"ШАХТЁР: ГЛУБЖЕ!  v0.7",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("#f5d36b"))
 	draw_string(ThemeDB.fallback_font,Vector2(18,69),"Монеты: "+str(coins),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(210,69),"Рюкзак: "+str(bag_used())+"/"+str(bag_capacity()),HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color.WHITE)
 	draw_string(ThemeDB.fallback_font,Vector2(470,69),"Глубина: "+str(maxi(0,player.y-SURFACE_ROW))+" м",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color.WHITE)
-	draw_string(ThemeDB.fallback_font,Vector2(18,105),"Кирка "+str(pick_level)+"  •  Броня "+str(armor_level)+"  •  TNT "+str(tnt),HORIZONTAL_ALIGNMENT_LEFT,-1,17,Color("#c7d0d8"))
-	draw_string(ThemeDB.fallback_font,Vector2(18,139),biome_name(maxi(0,player.y-SURFACE_ROW)),HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color("#e4b657"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,105),"Кирка "+str(pick_level)+"  •  Броня "+str(armor_level)+"  •  TNT "+str(tnt)+"  •  Аптечки "+str(potions),HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color("#c7d0d8"))
+	draw_string(ThemeDB.fallback_font,Vector2(18,139),biome_name(maxi(0,player.y-SURFACE_ROW))+"  •  риск x"+str(snappedf(cashout_multiplier(),0.05))+"  •  серия x"+str(combo),HORIZONTAL_ALIGNMENT_LEFT,-1,15,Color("#e4b657"))
 	draw_rect(Rect2(445,112,158,18),Color("#3a2225"))
 	draw_rect(Rect2(445,112,158*(float(hp)/float(max_hp())),18),Color("#50b86d"))
 	draw_string(ThemeDB.fallback_font,Vector2(493,132),str(hp)+"/"+str(max_hp()),HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
+	draw_rect(Rect2(445,140,158,8),Color("#292333"))
+	var frenzy_ratio: float = 1.0 if frenzy_turns > 0 else float(frenzy_charge)/100.0
+	draw_rect(Rect2(445,140,158*frenzy_ratio,8),Color("#f2b84b") if frenzy_turns == 0 else Color("#ffd95b"))
 	draw_small_button(pause_rect(),"II",true)
 
+	draw_rect(Rect2(45,TOP_H+8,630,50),Color(0,0,0,0.76))
 	if message_time > 0.0:
-		draw_rect(Rect2(45,TOP_H+8,630,50),Color(0,0,0,0.76))
 		draw_string(ThemeDB.fallback_font,Vector2(60,TOP_H+40),message,HORIZONTAL_ALIGNMENT_CENTER,600,17,Color.WHITE)
+	else:
+		var contract_line: String = ("✓ " if contract_complete() else "Контракт: ") + contract_text()
+		draw_string(ThemeDB.fallback_font,Vector2(60,TOP_H+40),contract_line,HORIZONTAL_ALIGNMENT_CENTER,600,15,Color("#f2d476"))
 
 func draw_controls() -> void:
 	var top: float = control_top()
@@ -1118,10 +1334,10 @@ func draw_controls() -> void:
 	draw_move_button(right_rect(),"→")
 	draw_move_button(up_rect(),"↑")
 	draw_move_button(down_rect(),"↓")
-	draw_action_button(attack_rect(),"КИРКА / УДАР",true,Color("#8a542d"))
+	draw_action_button(attack_rect(),"УДАР / КИРКА",true,Color("#8a542d"))
 	draw_action_button(tnt_rect(),("КУПИТЬ TNT • 35" if player.y <= SURFACE_ROW else "TNT • "+str(tnt)),true,Color("#783d38"))
 	draw_action_button(shop_rect(),"МАГАЗИН",player.y <= SURFACE_ROW,Color("#315f43"))
-	draw_action_button(quests_rect(),"ЗАДАНИЯ",player.y <= SURFACE_ROW,Color("#315f43"))
+	draw_action_button(quests_rect(),("ЗАДАНИЯ" if player.y <= SURFACE_ROW else "АПТЕЧКА • "+str(potions)),true,Color("#315f43"))
 
 func draw_hazard(r: Rect2, kind: String) -> void:
 	if kind == "lava":
