@@ -1,0 +1,177 @@
+name: Build Deep Mine v1.3 STABLE APK
+
+on:
+  push:
+    branches: [ apk-build-v13 ]
+    paths:
+      - 'webapp_v13/**'
+      - '.github/workflows/build-web-v13-stable-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find /usr/local/lib/android/sdk/cmdline-tools -type f -name sdkmanager | head -n 1)"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+
+      - name: Restore permanent Deep Mine signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: deep-mine-web-debug-signing-v1
+          fail-on-cache-miss: true
+
+      - name: Verify permanent key
+        shell: bash
+        run: |
+          KEYINFO="$(keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey)"
+          echo "$KEYINFO"
+          echo "$KEYINFO" | tr -d ':' | grep -qi '6C3334B90809F3B66186244A1DF1D642A462FBBC8FFF4BE3BDD35A4004C7008B'
+
+      - name: Rebuild v1.2 base
+        shell: bash
+        run: |
+          rm -rf /tmp/dm13
+          mkdir -p /tmp/dm13/_v09_cmp
+
+          cat webapp_v09/smallpart* > /tmp/v09.b64
+          base64 -d /tmp/v09.b64 > /tmp/v09.zip
+          echo "973d7f59475f589bbd01a605b4294f97fa91e8560779c73861783ac0d6720183  /tmp/v09.zip" | sha256sum -c -
+          unzip -q /tmp/v09.zip -d /tmp/dm13/_v09_cmp
+          cp -a /tmp/dm13/_v09_cmp/deep_mine_v09 /tmp/dm13/deep_mine_v10
+
+          cat webapp_v10/fix0 webapp_v10/fix1 webapp_v10/fix2 webapp_v10/fix3s0 webapp_v10/fix3s1 webapp_v10/fix3s2 webapp_v10/fix3s3 webapp_v10/v10.patch.gz.b64.part01 > /tmp/v10.b64
+          base64 -d /tmp/v10.b64 | gzip -d > /tmp/v10.patch
+          sed 's#_v09_cmp/deep_mine_v09/#deep_mine_v10/#g' /tmp/v10.patch > /tmp/v10.apply
+          cd /tmp/dm13
+          patch -p0 < /tmp/v10.apply
+
+          cp -a deep_mine_v10 deep_mine_v11
+          base64 -d "$GITHUB_WORKSPACE/webapp_v11/v11.patch.gz.b64" | gzip -d > /tmp/v11.patch
+          sed 's#_v10_cmp/deep_mine_v10/#deep_mine_v11/#g' /tmp/v11.patch > /tmp/v11.apply
+          patch -p0 < /tmp/v11.apply
+
+          cp -a deep_mine_v11 deep_mine_v12
+          base64 -d "$GITHUB_WORKSPACE/webapp_v12/v12.patch.gz.b64" | gzip -d > /tmp/v12.patch
+          sed 's#_v11_cmp/deep_mine_v11/#deep_mine_v12/#g' /tmp/v12.patch > /tmp/v12.apply
+          patch -p0 < /tmp/v12.apply
+
+      - name: Apply v1.3 wagon-floor logistics
+        shell: bash
+        run: |
+          cd /tmp/dm13
+          cp -a deep_mine_v12 deep_mine_v13
+          base64 -d "$GITHUB_WORKSPACE/webapp_v13/v13.patch.gz.b64" | gzip -d > /tmp/v13.patch
+          echo "8421412056d3cf1d3a0afbe83da5d5624578bd9efbe3e9d73b2d357c26c6bdfa  /tmp/v13.patch" | sha256sum -c -
+          sed 's#/mnt/data/dm12src/deep_mine_v12/#deep_mine_v13/#g; s#/mnt/data/deep_mine_v13/#deep_mine_v13/#g' /tmp/v13.patch > /tmp/v13.apply
+          patch -p0 < /tmp/v13.apply
+
+          cd /tmp/dm13/deep_mine_v13
+          echo "3bfefe83cb543233133a6b657d72fb2ec2070302530a16deaa416d5e93b33d35  index.html" | sha256sum -c -
+          echo "59e9e377803ea1e6d48091229aa055b4e3e57faf0d583a313021268b298c0b62  style.css" | sha256sum -c -
+          echo "b526a46bf4c57d3d0346047c076e6fdca43e385324705840902a656b9af9b851  game.js" | sha256sum -c -
+          echo "42b8c08795ca40b1a12a76a9edc8bedaee0c49fdfb9eeccefccbcc46cf39f215  README.txt" | sha256sum -c -
+          node --check game.js
+          grep -q 'Deep Mine v1.3' index.html
+          grep -q 'cartFloorRowsWithCargo' game.js
+          grep -q 'unloadCartToSurface' game.js
+          grep -q 'Вагонетка:' index.html
+
+          cd "$GITHUB_WORKSPACE"
+          rm -rf android-web/app/src/main/assets/*
+          cp -a /tmp/dm13/deep_mine_v13/. android-web/app/src/main/assets/
+
+      - name: Force explicit stable signing config
+        shell: bash
+        run: |
+          cat > android-web/app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.geodenix.deepmine'
+              compileSdk 35
+
+              signingConfigs {
+                  debug {
+                      storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
+                      storePassword "android"
+                      keyAlias "androiddebugkey"
+                      keyPassword "android"
+                  }
+              }
+
+              defaultConfig {
+                  applicationId "com.geodenix.deepmine"
+                  minSdk 24
+                  targetSdk 35
+                  versionCode 13
+                  versionName "1.3"
+              }
+
+              buildTypes {
+                  debug {
+                      minifyEnabled false
+                      signingConfig signingConfigs.debug
+                  }
+                  release {
+                      minifyEnabled false
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+          EOF
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build stable APK
+        working-directory: android-web
+        run: |
+          gradle --no-daemon --stacktrace :app:assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/DeepMine-v1.3-STABLE.apk
+
+      - name: Verify stable APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/DeepMine-v1.3-STABLE.apk"
+          test -s "$APK"
+          unzip -p "$APK" assets/index.html | grep -q 'Deep Mine v1.3'
+          unzip -p "$APK" assets/game.js | grep -q 'cartFloorRowsWithCargo'
+          unzip -p "$APK" assets/game.js | grep -q 'unloadCartToSurface'
+          /usr/local/lib/android/sdk/build-tools/35.0.1/aapt dump badging "$APK" | grep "package: name='com.geodenix.deepmine'" | grep "versionCode='13'" | grep "versionName='1.3'"
+          CERT="$("/usr/local/lib/android/sdk/build-tools/35.0.1/apksigner" verify --print-certs "$APK")"
+          echo "$CERT"
+          echo "$CERT" | grep -qi '6c3334b90809f3b66186244a1df1d642a462fbbc8fff4be3bdd35a4004c7008b'
+
+      - name: Upload stable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeepMine-v1.3-STABLE-APK
+          path: android-web/app/build/outputs/apk/debug/DeepMine-v1.3-STABLE.apk
+          if-no-files-found: error
+          retention-days: 30
