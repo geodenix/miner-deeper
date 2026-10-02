@@ -1,0 +1,98 @@
+name: Build Deep Mine v0.7 APK
+
+on:
+  push:
+    branches: [ apk-build-v07 ]
+    paths:
+      - 'android-web/**'
+      - 'webapp_v07/**'
+      - '.github/workflows/build-web-v07-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find /usr/local/lib/android/sdk/cmdline-tools -type f -name sdkmanager | head -n 1)"
+          echo "Using sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+
+      - name: Restore persistent debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: deep-mine-web-debug-signing-v1
+
+      - name: Create debug keystore
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v               -keystore "$HOME/.android/debug.keystore"               -storepass android               -alias androiddebugkey               -keypass android               -dname "CN=Deep Mine Debug,O=geodenix,C=RU"               -keyalg RSA -keysize 2048 -validity 10000
+          fi
+
+      - name: Restore Deep Mine v0.7 web files
+        shell: bash
+        run: |
+          cat webapp_v07/deep_mine_v07.zip.b64.part* > /tmp/deep_mine_v07.b64
+          base64 -d /tmp/deep_mine_v07.b64 > /tmp/deep_mine_v07.zip
+          echo "0443bc242fc22c29047edc54f32098a685b120ad7549be12b1c3dbeba9bc1e91  /tmp/deep_mine_v07.zip" | sha256sum -c -
+          rm -rf /tmp/deep-mine-unpacked
+          mkdir -p /tmp/deep-mine-unpacked android-web/app/src/main/assets
+          rm -rf android-web/app/src/main/assets/*
+          unzip -q /tmp/deep_mine_v07.zip -d /tmp/deep-mine-unpacked
+          cp -a /tmp/deep-mine-unpacked/deep_mine_v07/. android-web/app/src/main/assets/
+          test -f android-web/app/src/main/assets/index.html
+          test -f android-web/app/src/main/assets/style.css
+          test -f android-web/app/src/main/assets/game.js
+          echo "Assets prepared:"
+          ls -lh android-web/app/src/main/assets
+
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          gradle --no-daemon --stacktrace :app:assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/DeepMine-v0.7.apk
+
+      - name: Verify APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/DeepMine-v0.7.apk"
+          test -s "$APK"
+          unzip -l "$APK" | grep -q 'assets/index.html'
+          unzip -l "$APK" | grep -q 'assets/game.js'
+          /usr/local/lib/android/sdk/build-tools/35.0.1/apksigner verify "$APK"
+          ls -lh "$APK"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeepMine-v0.7-APK
+          path: android-web/app/build/outputs/apk/debug/DeepMine-v0.7.apk
+          if-no-files-found: error
+          retention-days: 14
