@@ -48,31 +48,27 @@ jobs:
             keytool -genkeypair -v               -keystore "$HOME/.android/debug.keystore"               -storepass android               -alias androiddebugkey               -keypass android               -dname "CN=Deep Mine Debug,O=geodenix,C=RU"               -keyalg RSA -keysize 2048 -validity 10000
           fi
 
-      - name: Rebuild Deep Mine v0.8 web files
+      - name: Restore Deep Mine v0.8 web files
         shell: bash
         run: |
-          rm -rf /tmp/deep-v07 /tmp/deep-v08
-          mkdir -p /tmp/deep-v07 /tmp/deep-v08
+          cat webapp_v08/full/v08assets.tar.gz.b64.part* > /tmp/v08assets.b64
+          base64 -d /tmp/v08assets.b64 > /tmp/v08assets.tar.gz
+          echo "21e3ca4606a6b8f632b58df2a82263e3ae610cf7a37812081d1ae4c2bb3f92f9  /tmp/v08assets.tar.gz" | sha256sum -c -
 
-          cat webapp_v07/deep_mine_v07.zip.b64.part* > /tmp/deep_mine_v07.b64
-          base64 -d /tmp/deep_mine_v07.b64 > /tmp/deep_mine_v07.zip
-          unzip -q /tmp/deep_mine_v07.zip -d /tmp/deep-v07
-          mv /tmp/deep-v07/deep_mine_v07 /tmp/deep-v08/deep_mine_v08
+          rm -rf /tmp/v08assets
+          mkdir -p /tmp/v08assets
+          tar -xzf /tmp/v08assets.tar.gz -C /tmp/v08assets
 
-          cat webapp_v08/v08.patch.gz.b64.part* > /tmp/v08.patch.gz.b64
-          base64 -d /tmp/v08.patch.gz.b64 | gzip -d > /tmp/v08.patch
-
-          cd /tmp/deep-v08/deep_mine_v08
-          patch -p1 < /tmp/v08.patch
-          node --check game.js
-
+          cd /tmp/v08assets
           echo "96b64612a96752c89df74038d32a0eb7e2f7c22c39a9e69500cce7c0f123059b  index.html" | sha256sum -c -
           echo "424fe2f6ee0ddaf6f3aab82ba5a7e5f1eed9eb7c90b5bff85a158a39c19b514d  style.css" | sha256sum -c -
           echo "1e1e2196be1aced7cf5e73f7efb868488585f88ed0b604f7d95e39f826050283  game.js" | sha256sum -c -
+          echo "0a26dc0bbf95543faca5171bfa18e5397e567b07de1807abe25e55f17f73d78f  README.txt" | sha256sum -c -
+          node --check game.js
 
           cd "$GITHUB_WORKSPACE"
           rm -rf android-web/app/src/main/assets/*
-          cp -a /tmp/deep-v08/deep_mine_v08/. android-web/app/src/main/assets/
+          cp -a /tmp/v08assets/. android-web/app/src/main/assets/
           test -f android-web/app/src/main/assets/index.html
           test -f android-web/app/src/main/assets/style.css
           test -f android-web/app/src/main/assets/game.js
