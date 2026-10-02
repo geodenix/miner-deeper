@@ -1,0 +1,117 @@
+name: Build Deep Mine v1.0 APK
+
+on:
+  push:
+    branches: [ apk-build-v10 ]
+    paths:
+      - 'android-web/**'
+      - 'webapp_v09/smallpart*'
+      - 'webapp_v10/**'
+      - '.github/workflows/build-web-v10-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find /usr/local/lib/android/sdk/cmdline-tools -type f -name sdkmanager | head -n 1)"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+
+      - name: Restore persistent debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: deep-mine-web-debug-signing-v1
+
+      - name: Create debug keystore
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v               -keystore "$HOME/.android/debug.keystore"               -storepass android               -alias androiddebugkey               -keypass android               -dname "CN=Deep Mine Debug,O=geodenix,C=RU"               -keyalg RSA -keysize 2048 -validity 10000
+          fi
+
+      - name: Restore Deep Mine v1.0 web files
+        shell: bash
+        run: |
+          rm -rf /tmp/deep-v10-work
+          mkdir -p /tmp/deep-v10-work/_v09_cmp
+
+          cat webapp_v09/smallpart* > /tmp/deep_mine_v09.b64
+          base64 -d /tmp/deep_mine_v09.b64 > /tmp/deep_mine_v09.zip
+          echo "973d7f59475f589bbd01a605b4294f97fa91e8560779c73861783ac0d6720183  /tmp/deep_mine_v09.zip" | sha256sum -c -
+          unzip -q /tmp/deep_mine_v09.zip -d /tmp/deep-v10-work/_v09_cmp
+          cp -a /tmp/deep-v10-work/_v09_cmp/deep_mine_v09 /tmp/deep-v10-work/deep_mine_v10
+
+          cat webapp_v10/v10.patch.gz.b64.part* > /tmp/v10.patch.gz.b64
+          base64 -d /tmp/v10.patch.gz.b64 | gzip -d > /tmp/v10.patch
+          echo "b0041049d6b7838030a73efa3f65338def29c454e2fc05bd238d9ea31121e94d  /tmp/v10.patch" | sha256sum -c -
+          sed 's#_v09_cmp/deep_mine_v09/#deep_mine_v10/#g' /tmp/v10.patch > /tmp/v10.apply.patch
+
+          cd /tmp/deep-v10-work
+          patch -p0 < /tmp/v10.apply.patch
+
+          cd /tmp/deep-v10-work/deep_mine_v10
+          echo "90e40c491e7ecba15491663a1aec73ba8618033e5dd3a2434018beb7e8f9ad7c  index.html" | sha256sum -c -
+          echo "dd6ed70f8743936162e25ef2393cf5e450993d26d42f22748cfee1c7f74235be  style.css" | sha256sum -c -
+          echo "0361ac2f4b7ea748b35ef78a459a80436c43748044fb027bfc7e7d3c0caf3d1a  game.js" | sha256sum -c -
+          echo "183769977d36fcb9adbc9c32ea4bf952069650c146755bf364fcaeb2d4d26961  README.txt" | sha256sum -c -
+          node --check game.js
+          grep -q 'Deep Mine v1.0' index.html
+          grep -q 'REGION_EVENTS' game.js
+          grep -q 'prestigeButton' index.html
+
+          cd "$GITHUB_WORKSPACE"
+          rm -rf android-web/app/src/main/assets/*
+          cp -a /tmp/deep-v10-work/deep_mine_v10/. android-web/app/src/main/assets/
+
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          gradle --no-daemon --stacktrace :app:assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/DeepMine-v1.0.apk
+
+      - name: Verify APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/DeepMine-v1.0.apk"
+          test -s "$APK"
+          unzip -l "$APK" | grep -q 'assets/index.html'
+          unzip -l "$APK" | grep -q 'assets/game.js'
+          unzip -p "$APK" assets/index.html | grep -q 'Deep Mine v1.0'
+          unzip -p "$APK" assets/game.js | grep -q 'REGION_EVENTS'
+          /usr/local/lib/android/sdk/build-tools/35.0.1/apksigner verify "$APK"
+          ls -lh "$APK"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeepMine-v1.0-APK
+          path: android-web/app/build/outputs/apk/debug/DeepMine-v1.0.apk
+          if-no-files-found: error
+          retention-days: 14
