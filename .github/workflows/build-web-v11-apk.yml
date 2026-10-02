@@ -1,0 +1,132 @@
+name: Build Deep Mine v1.1 APK
+
+on:
+  push:
+    branches: [ apk-build-v10 ]
+    paths:
+      - 'webapp_v11/**'
+      - '.github/workflows/build-web-v11-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find /usr/local/lib/android/sdk/cmdline-tools -type f -name sdkmanager | head -n 1)"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+
+      - name: Restore same signing key as installed v1.0
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: deep-mine-web-debug-signing-v1
+
+      - name: Require existing signing key
+        shell: bash
+        run: |
+          test -s "$HOME/.android/debug.keystore"
+          keytool -list -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey >/dev/null
+
+      - name: Restore Deep Mine v1.0 base
+        shell: bash
+        run: |
+          rm -rf /tmp/deep-v11-work
+          mkdir -p /tmp/deep-v11-work/_v09_cmp
+
+          cat webapp_v09/smallpart* > /tmp/deep_mine_v09.b64
+          base64 -d /tmp/deep_mine_v09.b64 > /tmp/deep_mine_v09.zip
+          echo "973d7f59475f589bbd01a605b4294f97fa91e8560779c73861783ac0d6720183  /tmp/deep_mine_v09.zip" | sha256sum -c -
+          unzip -q /tmp/deep_mine_v09.zip -d /tmp/deep-v11-work/_v09_cmp
+          cp -a /tmp/deep-v11-work/_v09_cmp/deep_mine_v09 /tmp/deep-v11-work/deep_mine_v10
+
+          cat webapp_v10/fix0 webapp_v10/fix1 webapp_v10/fix2 webapp_v10/fix3s0 webapp_v10/fix3s1 webapp_v10/fix3s2 webapp_v10/fix3s3 webapp_v10/v10.patch.gz.b64.part01 > /tmp/v10.patch.gz.b64
+          base64 -d /tmp/v10.patch.gz.b64 | gzip -d > /tmp/v10.patch
+          echo "b0041049d6b7838030a73efa3f65338def29c454e2fc05bd238d9ea31121e94d  /tmp/v10.patch" | sha256sum -c -
+          sed 's#_v09_cmp/deep_mine_v09/#deep_mine_v10/#g' /tmp/v10.patch > /tmp/v10.apply.patch
+
+          cd /tmp/deep-v11-work
+          patch -p0 < /tmp/v10.apply.patch
+          cp -a deep_mine_v10 deep_mine_v11
+
+      - name: Apply v1.1 smooth truck patch
+        shell: bash
+        run: |
+          base64 -d webapp_v11/v11.patch.gz.b64 | gzip -d > /tmp/v11.patch
+          echo "12cc3a9c4762e5079a9f3b9e80ac19041a7d56e94e9426515c818b947730207e  /tmp/v11.patch" | sha256sum -c -
+          sed 's#_v10_cmp/deep_mine_v10/#deep_mine_v11/#g' /tmp/v11.patch > /tmp/v11.apply.patch
+
+          cd /tmp/deep-v11-work
+          patch -p0 < /tmp/v11.apply.patch
+
+          cd /tmp/deep-v11-work/deep_mine_v11
+          echo "18af5fdd23654caa7c734450fe6d64d778511483c4fb9d5a2ca7c26e50d5945a  index.html" | sha256sum -c -
+          echo "dd6ed70f8743936162e25ef2393cf5e450993d26d42f22748cfee1c7f74235be  style.css" | sha256sum -c -
+          echo "052c5d5de15d5365802cff64dd8054d3db3e15398b5a5dc04558a480acead8a1  game.js" | sha256sum -c -
+          echo "a28306ab8a914b4b71c7d11807ccd8cd8389bfcfb030c072ad32d81ea22e89f2  README.txt" | sha256sum -c -
+          node --check game.js
+          grep -q 'Deep Mine v1.1' index.html
+          grep -q 'surfaceTruckPhase' game.js
+          grep -q 'do not call getBoundingClientRect' game.js
+
+          cd "$GITHUB_WORKSPACE"
+          rm -rf android-web/app/src/main/assets/*
+          cp -a /tmp/deep-v11-work/deep_mine_v11/. android-web/app/src/main/assets/
+
+      - name: Set Android update version
+        shell: bash
+        run: |
+          sed -i 's/versionCode 10/versionCode 11/' android-web/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.1"/' android-web/app/build.gradle
+          grep -q 'applicationId "com.geodenix.deepmine"' android-web/app/build.gradle
+          grep -q 'versionCode 11' android-web/app/build.gradle
+          grep -q 'versionName "1.1"' android-web/app/build.gradle
+
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build update APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          gradle --no-daemon --stacktrace :app:assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/DeepMine-v1.1-update.apk
+
+      - name: Verify update APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/DeepMine-v1.1-update.apk"
+          test -s "$APK"
+          unzip -p "$APK" assets/index.html | grep -q 'Deep Mine v1.1'
+          unzip -p "$APK" assets/game.js | grep -q 'surfaceTruckPhase'
+          /usr/local/lib/android/sdk/build-tools/35.0.1/apksigner verify --print-certs "$APK"
+          /usr/local/lib/android/sdk/build-tools/35.0.1/aapt dump badging "$APK" | grep "package: name='com.geodenix.deepmine'" | grep "versionCode='11'" | grep "versionName='1.1'"
+          ls -lh "$APK"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeepMine-v1.1-update-APK
+          path: android-web/app/build/outputs/apk/debug/DeepMine-v1.1-update.apk
+          if-no-files-found: error
+          retention-days: 14
