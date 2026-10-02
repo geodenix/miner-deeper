@@ -61,7 +61,7 @@ jobs:
           unzip -q /tmp/deep_mine_v09.zip -d /tmp/deep-v10-work/_v09_cmp
           cp -a /tmp/deep-v10-work/_v09_cmp/deep_mine_v09 /tmp/deep-v10-work/deep_mine_v10
 
-          cat webapp_v10/v10.patch.gz.b64.part* > /tmp/v10.patch.gz.b64
+          cat webapp_v10/fix0 webapp_v10/fix1 webapp_v10/fix2 webapp_v10/fix3s0 webapp_v10/fix3s1 webapp_v10/fix3s2 webapp_v10/fix3s3 webapp_v10/v10.patch.gz.b64.part01 > /tmp/v10.patch.gz.b64
           base64 -d /tmp/v10.patch.gz.b64 | gzip -d > /tmp/v10.patch
           echo "b0041049d6b7838030a73efa3f65338def29c454e2fc05bd238d9ea31121e94d  /tmp/v10.patch" | sha256sum -c -
           sed 's#_v09_cmp/deep_mine_v09/#deep_mine_v10/#g' /tmp/v10.patch > /tmp/v10.apply.patch
