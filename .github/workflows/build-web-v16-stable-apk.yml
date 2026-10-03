@@ -31,12 +31,11 @@ jobs:
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
 
-      - name: Restore stable signing key
+      - name: Cache Night Courier signing key
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
-          key: deep-mine-web-debug-signing-v1
-          fail-on-cache-miss: true
+          key: night-courier-signing-v1
 
       - name: Prepare game assets
         shell: bash
