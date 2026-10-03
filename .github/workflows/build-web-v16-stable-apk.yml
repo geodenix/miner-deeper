@@ -43,7 +43,7 @@ jobs:
           rm -rf android-web/app/src/main/assets
           mkdir -p android-web/app/src/main/assets
           base64 -d life_zero_v02/index.html.gz.b64 | gzip -d > android-web/app/src/main/assets/index.html
-          echo "14ce3b3c9a2d7d6c0a95457f2f547f710a7c2ecddd0d7e156989e5edef02b5bf  android-web/app/src/main/assets/index.html" | sha256sum -c -
+          echo "0ac126737e872abf194740e594b6be62a576d562ba2d12d5fcf274507a162cdd  android-web/app/src/main/assets/index.html" | sha256sum -c -
           grep -q 'Жизнь с нуля v0.2' android-web/app/src/main/assets/index.html
 
       - name: Configure Life Zero app
