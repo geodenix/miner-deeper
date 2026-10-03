@@ -1,4 +1,4 @@
-name: Build Life Zero v0.1 APK
+name: Build Life Zero v0.2 APK
 
 on:
   push:
@@ -43,8 +43,8 @@ jobs:
           rm -rf android-web/app/src/main/assets
           mkdir -p android-web/app/src/main/assets
           base64 -d life_zero_v02/index.html.gz.b64 | gzip -d > android-web/app/src/main/assets/index.html
-          echo "7bce69a26f3d3dc0bafda7c4275f7e1568482536a49df16efd9810ef9141ef69  android-web/app/src/main/assets/index.html" | sha256sum -c -
-          grep -q 'Жизнь с нуля v0.1' android-web/app/src/main/assets/index.html
+          echo "14ce3b3c9a2d7d6c0a95457f2f547f710a7c2ecddd0d7e156989e5edef02b5bf  android-web/app/src/main/assets/index.html" | sha256sum -c -
+          grep -q 'Жизнь с нуля v0.2' android-web/app/src/main/assets/index.html
 
       - name: Configure Life Zero app
         shell: bash
@@ -86,8 +86,8 @@ jobs:
                   applicationId "com.geodenix.lifezero"
                   minSdk 24
                   targetSdk 35
-                  versionCode 2
-                  versionName "0.1"
+                  versionCode 3
+                  versionName "0.2"
               }
 
               buildTypes {
@@ -114,16 +114,16 @@ jobs:
         working-directory: android-web
         run: |
           gradle --no-daemon --stacktrace :app:assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/LifeZero-v0.1.apk
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/LifeZero-v0.2.apk
 
       - name: Verify APK
         working-directory: android-web
         shell: bash
         run: |
-          APK="app/build/outputs/apk/debug/LifeZero-v0.1.apk"
+          APK="app/build/outputs/apk/debug/LifeZero-v0.2.apk"
           test -s "$APK"
-          unzip -p "$APK" assets/index.html | grep -q 'Жизнь с нуля v0.1'
-          /usr/local/lib/android/sdk/build-tools/35.0.1/aapt dump badging "$APK" | grep "package: name='com.geodenix.lifezero'" | grep "versionCode='2'" | grep "versionName='0.1'"
+          unzip -p "$APK" assets/index.html | grep -q 'Жизнь с нуля v0.2'
+          /usr/local/lib/android/sdk/build-tools/35.0.1/aapt dump badging "$APK" | grep "package: name='com.geodenix.lifezero'" | grep "versionCode='3'" | grep "versionName='0.2'"
           VERIFY="$("/usr/local/lib/android/sdk/build-tools/35.0.1/apksigner" verify --verbose --print-certs "$APK")"
           echo "$VERIFY"
           echo "$VERIFY" | grep -q 'Verified using v2 scheme (APK Signature Scheme v2): true'
@@ -131,7 +131,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LifeZero-v0.1-APK
-          path: android-web/app/build/outputs/apk/debug/LifeZero-v0.1.apk
+          name: LifeZero-v0.2-APK
+          path: android-web/app/build/outputs/apk/debug/LifeZero-v0.2.apk
           if-no-files-found: error
           retention-days: 30
