@@ -1,0 +1,184 @@
+name: Build Deep Mine v1.6 STABLE APK
+
+on:
+  push:
+    branches: [ apk-build-v10 ]
+    paths:
+      - 'webapp_v16/**'
+      - '.github/workflows/build-web-v16-stable-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find /usr/local/lib/android/sdk/cmdline-tools -type f -name sdkmanager | head -n 1)"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+
+      - name: Restore permanent Deep Mine signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: deep-mine-web-debug-signing-v1
+          fail-on-cache-miss: true
+
+      - name: Verify permanent key
+        shell: bash
+        run: |
+          KEYINFO="$(keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey)"
+          echo "$KEYINFO" | tr -d ':' | grep -qi '6C3334B90809F3B66186244A1DF1D642A462FBBC8FFF4BE3BDD35A4004C7008B'
+
+      - name: Rebuild Deep Mine v1.5
+        shell: bash
+        run: |
+          rm -rf /tmp/dm16
+          mkdir -p /tmp/dm16/_v09_cmp
+
+          cat webapp_v09/smallpart* > /tmp/v09.b64
+          base64 -d /tmp/v09.b64 > /tmp/v09.zip
+          unzip -q /tmp/v09.zip -d /tmp/dm16/_v09_cmp
+          cp -a /tmp/dm16/_v09_cmp/deep_mine_v09 /tmp/dm16/deep_mine_v10
+
+          cat webapp_v10/fix0 webapp_v10/fix1 webapp_v10/fix2 webapp_v10/fix3s0 webapp_v10/fix3s1 webapp_v10/fix3s2 webapp_v10/fix3s3 webapp_v10/v10.patch.gz.b64.part01 > /tmp/v10.b64
+          base64 -d /tmp/v10.b64 | gzip -d > /tmp/v10.patch
+          sed 's#_v09_cmp/deep_mine_v09/#deep_mine_v10/#g' /tmp/v10.patch > /tmp/v10.apply
+          cd /tmp/dm16
+          patch -p0 < /tmp/v10.apply
+
+          cp -a deep_mine_v10 deep_mine_v11
+          base64 -d "$GITHUB_WORKSPACE/webapp_v11/v11.patch.gz.b64" | gzip -d > /tmp/v11.patch
+          sed 's#_v10_cmp/deep_mine_v10/#deep_mine_v11/#g' /tmp/v11.patch > /tmp/v11.apply
+          patch -p0 < /tmp/v11.apply
+
+          cp -a deep_mine_v11 deep_mine_v12
+          base64 -d "$GITHUB_WORKSPACE/webapp_v12/v12.patch.gz.b64" | gzip -d > /tmp/v12.patch
+          sed 's#_v11_cmp/deep_mine_v11/#deep_mine_v12/#g' /tmp/v12.patch > /tmp/v12.apply
+          patch -p0 < /tmp/v12.apply
+
+          cp -a deep_mine_v12 deep_mine_v13
+          base64 -d "$GITHUB_WORKSPACE/webapp_v13/v13.patch.gz.b64" | gzip -d > /tmp/v13.patch
+          sed 's#/mnt/data/dm12src/deep_mine_v12/#deep_mine_v13/#g; s#/mnt/data/deep_mine_v13/#deep_mine_v13/#g' /tmp/v13.patch > /tmp/v13.apply
+          patch -p0 < /tmp/v13.apply
+
+          cp -a deep_mine_v13 deep_mine_v14
+          base64 -d "$GITHUB_WORKSPACE/webapp_v14/v14.patch.gz.b64" | gzip -d > /tmp/v14.patch
+          sed 's#/mnt/data/_v13_cmp/deep_mine_v13/#deep_mine_v14/#g; s#/mnt/data/deep_mine_v14/#deep_mine_v14/#g' /tmp/v14.patch > /tmp/v14.apply
+          patch -p0 < /tmp/v14.apply
+
+          cp -a deep_mine_v14 deep_mine_v15
+          base64 -d "$GITHUB_WORKSPACE/webapp_v15/v15.patch.gz.b64" | gzip -d > /tmp/v15.patch
+          sed 's#/mnt/data/dm14inspect/deep_mine_v14/#deep_mine_v15/#g; s#/mnt/data/deep_mine_v15/#deep_mine_v15/#g' /tmp/v15.patch > /tmp/v15.apply
+          patch -p0 < /tmp/v15.apply
+
+      - name: Apply v1.6 drill hotfix
+        shell: bash
+        run: |
+          cd /tmp/dm16
+          cp -a deep_mine_v15 deep_mine_v16
+          base64 -d "$GITHUB_WORKSPACE/webapp_v16/v16.patch.gz.b64" | gzip -d > /tmp/v16.patch
+          echo "fe540c154f91e0f8e1d94e6ccdc9af6d10be54c4946db9aaecb40206e4888b68  /tmp/v16.patch" | sha256sum -c -
+          sed 's#/mnt/data/v15base/#deep_mine_v16/#g; s#/mnt/data/deep_mine_v16/#deep_mine_v16/#g' /tmp/v16.patch > /tmp/v16.apply
+          patch -p0 < /tmp/v16.apply
+
+          cd /tmp/dm16/deep_mine_v16
+          node --check game.js
+          grep -q 'Deep Mine v1.6' index.html
+          grep -q 'function drillMineTick' game.js
+          test "$(grep -c 'function drillMineTick' game.js)" -eq 1
+          grep -q "safeRuntime('drill',drillMineTick" game.js
+
+          cd "$GITHUB_WORKSPACE"
+          rm -rf android-web/app/src/main/assets/*
+          cp -a /tmp/dm16/deep_mine_v16/. android-web/app/src/main/assets/
+
+      - name: Force stable version/signing
+        shell: bash
+        run: |
+          cat > android-web/app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.geodenix.deepmine'
+              compileSdk 35
+
+              signingConfigs {
+                  debug {
+                      storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
+                      storePassword "android"
+                      keyAlias "androiddebugkey"
+                      keyPassword "android"
+                  }
+              }
+
+              defaultConfig {
+                  applicationId "com.geodenix.deepmine"
+                  minSdk 24
+                  targetSdk 35
+                  versionCode 16
+                  versionName "1.6"
+              }
+
+              buildTypes {
+                  debug {
+                      minifyEnabled false
+                      signingConfig signingConfigs.debug
+                  }
+                  release {
+                      minifyEnabled false
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+          EOF
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build stable APK
+        working-directory: android-web
+        run: |
+          gradle --no-daemon --stacktrace :app:assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/DeepMine-v1.6-STABLE.apk
+
+      - name: Verify stable APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/DeepMine-v1.6-STABLE.apk"
+          test -s "$APK"
+          unzip -p "$APK" assets/index.html | grep -q 'Deep Mine v1.6'
+          unzip -p "$APK" assets/game.js | grep -q 'function drillMineTick'
+          /usr/local/lib/android/sdk/build-tools/35.0.1/aapt dump badging "$APK" | grep "package: name='com.geodenix.deepmine'" | grep "versionCode='16'" | grep "versionName='1.6'"
+          CERT="$("/usr/local/lib/android/sdk/build-tools/35.0.1/apksigner" verify --print-certs "$APK")"
+          echo "$CERT" | grep -qi '6c3334b90809f3b66186244a1df1d642a462fbbc8fff4be3bdd35a4004c7008b'
+
+      - name: Upload stable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeepMine-v1.6-STABLE-APK
+          path: android-web/app/build/outputs/apk/debug/DeepMine-v1.6-STABLE.apk
+          if-no-files-found: error
+          retention-days: 30
