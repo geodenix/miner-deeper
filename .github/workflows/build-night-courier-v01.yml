@@ -44,7 +44,8 @@ jobs:
       - name: Prepare Life Zero
         shell: bash
         run: |
-          rm -rf android-web/app/src/main/assets/*
+          rm -rf android-web/app/src/main/assets
+          mkdir -p android-web/app/src/main/assets
           base64 -d life_zero_v02/index.html.gz.b64 | gzip -d > android-web/app/src/main/assets/index.html
           echo "7bce69a26f3d3dc0bafda7c4275f7e1568482536a49df16efd9810ef9141ef69  android-web/app/src/main/assets/index.html" | sha256sum -c -
 
