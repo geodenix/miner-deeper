@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#050816">
+<title>Ночной Курьер v0.1</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;background:#050816;color:#f4f7ff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}body{min-height:100vh;display:flex;justify-content:center}#g{width:min(100%,520px);padding:8px;user-select:none}.top{display:flex;justify-content:space-between;align-items:center;margin:2px 0 7px}.brand{font-weight:900}.brand b{color:#22d3ee}.mini{font-size:10px;color:#93a0bd}.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px}.hud div{background:#10172a;border:1px solid #26324f;border-radius:10px;text-align:center;padding:5px 2px}.hud b{display:block;font-size:13px}.hud span{font-size:8px;color:#93a0bd}.stage{position:relative;border:1px solid #26324f;border-radius:15px;overflow:hidden;background:#02040b}canvas{width:100%;height:auto;display:block;touch-action:none}.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#02040bcc;padding:15px}.card{width:min(94%,380px);background:#0d1426f7;border:1px solid #33415f;border-radius:18px;padding:16px;text-align:center}.card h1{margin:0;font-size:25px}.card h1 b{color:#22d3ee}.card p{font-size:12px;line-height:1.4;color:#aab5cf}.btn,.ctrl{border:1px solid #33415f;border-radius:12px;background:#18223a;color:#fff;font-weight:800;min-height:44px}.btn.primary{background:#0e7490;border-color:#22d3ee}.hidden{display:none!important}.result{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}.result div,.shop div{background:#0b1222;border:1px solid #26324f;border-radius:10px;padding:7px}.result b{display:block;font-size:17px}.result span{font-size:8px;color:#93a0bd}.shop{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:9px 0}.shop b{font-size:11px}.shop small{display:block;color:#93a0bd;font-size:8px;min-height:22px;margin:3px 0}.shop button{width:100%;min-height:34px;font-size:10px}.controls{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:6px;margin-top:6px}.ctrl{height:56px;font-size:23px;touch-action:none}.ctrl.boost{font-size:14px;background:#422006;border-color:#a16207;color:#fde68a}.meter{height:7px;background:#111827;border:1px solid #26324f;border-radius:8px;overflow:hidden;margin-top:6px}.meter i{display:block;width:100%;height:100%;background:linear-gradient(90deg,#22d3ee,#f472b6)}#pause{width:44px;height:40px;border:1px solid #26324f;border-radius:11px;background:#10172a;color:white}.toast{position:absolute;top:17%;left:50%;transform:translateX(-50%);background:#050816e8;border:1px solid #33415f;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800;opacity:0;pointer-events:none;white-space:nowrap}.toast.on{opacity:1}.tip{text-align:center;color:#93a0bd;font-size:9px;margin-top:5px}
+</style>
+</head>
+<body>
+<div id="g">
+<div class="top"><div><div class="brand">НОЧНОЙ <b>КУРЬЕР</b></div><div class="mini">v0.1 • Android</div></div><button id="pause">⏸</button></div>
+<div class="hud"><div><b id="dist">0 м</b><span>ДИСТАНЦИЯ</span></div><div><b id="coins">0</b><span>МОНЕТЫ</span></div><div><b id="cargo">0/3</b><span>ПОСЫЛКИ</span></div><div><b id="hp">100</b><span>ПРОЧНОСТЬ</span></div></div>
+<div class="stage">
+<canvas id="c" width="420" height="680"></canvas><div class="toast" id="toast"></div>
+<div class="overlay" id="menu"><div class="card"><h1>НОЧНОЙ <b>КУРЬЕР</b></h1><p>Забирай посылки, доставляй их в зелёные зоны, уворачивайся от машин и следи за топливом.</p><div class="result"><div><b id="best">0 м</b><span>РЕКОРД</span></div><div><b id="bank">0</b><span>БАНК</span></div></div><div class="shop"><div><b>🛡 Броня <span id="aLv">0</span></b><small>Меньше урона</small><button class="btn" id="aBuy"></button></div><div><b>⛽ Бак <span id="tLv">0</span></b><small>Больше топлива</small><button class="btn" id="tBuy"></button></div><div><b>🧲 Магнит <span id="mLv">0</span></b><small>Тянет монеты</small><button class="btn" id="mBuy"></button></div></div><button class="btn primary" id="start" style="width:100%">▶ НАЧАТЬ ЗАЕЗД</button></div></div>
+<div class="overlay hidden" id="over"><div class="card"><h1 id="overTitle">ЗАЕЗД ОКОНЧЕН</h1><div class="result"><div><b id="rDist">0 м</b><span>ДИСТАНЦИЯ</span></div><div><b id="rCoins">0</b><span>МОНЕТЫ</span></div><div><b id="rDel">0</b><span>ДОСТАВКИ</span></div><div><b id="rCombo">x1</b><span>КОМБО</span></div></div><button class="btn primary" id="retry" style="width:100%">↻ ЕЩЁ РАЗ</button><button class="btn" id="garage" style="width:100%;margin-top:6px">ГАРАЖ</button></div></div>
+<div class="overlay hidden" id="pauseLayer"><div class="card"><h1>ПАУЗА</h1><button class="btn primary" id="resume" style="width:100%;margin-top:10px">ПРОДОЛЖИТЬ</button></div></div>
+</div>
+<div class="meter"><i id="fuel"></i></div>
+<div class="controls"><button class="ctrl" id="left">◀</button><button class="ctrl boost" id="boost">⚡ BOOST</button><button class="ctrl" id="right">▶</button></div>
+<div class="tip">⚡ топливо • 💚 ремонт • 📦 посылка • 🟩 доставка</div>
+</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),c=$('c'),x=c.getContext('2d'),W=c.width,H=c.height,road={x:55,w:310,lw:62},SAVE='night-courier-v01';
+let meta={bank:0,best:0,up:{a:0,t:0,m:0}};try{const q=JSON.parse(localStorage.getItem(SAVE)||'null');if(q&&q.up)meta=q}catch(_){}
+let s=null,raf=0,last=0,hold={l:0,r:0,b:0},drag=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a),lane=i=>road.x+road.lw*(i+.5);
+function save(){try{localStorage.setItem(SAVE,JSON.stringify(meta))}catch(_){}}
+function vib(v){try{navigator.vibrate&&navigator.vibrate(v)}catch(_){}}
+function toast(t){$('toast').textContent=t;$('toast').classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('on'),850)}
+function cost(k){return 80+meta.up[k]*90}
+function garage(){ $('best').textContent=Math.floor(meta.best)+' м';$('bank').textContent=meta.bank;$('aLv').textContent=meta.up.a;$('tLv').textContent=meta.up.t;$('mLv').textContent=meta.up.m;[['a','aBuy'],['t','tBuy'],['m','mBuy']].forEach(([k,id])=>{const b=$(id);b.textContent=cost(k)+' 🪙';b.disabled=meta.bank<cost(k)||meta.up[k]>=5})}
+function buy(k){if(meta.bank<cost(k)||meta.up[k]>=5)return;meta.bank-=cost(k);meta.up[k]++;save();garage()}
+$('aBuy').onclick=()=>buy('a');$('tBuy').onclick=()=>buy('t');$('mBuy').onclick=()=>buy('m');
+function start(){const fuel=100+meta.up.t*12;s={run:1,pause:0,d:0,coins:0,cargo:0,del:0,combo:1,max:1,hp:100,fuel,maxFuel:fuel,speed:235,off:0,spawn:0,pick:1,gate:6,p:{x:lane(2),y:H-105,w:34,h:64,tx:lane(2),inv:0},o:[],parts:[]};$('menu').classList.add('hidden');$('over').classList.add('hidden');$('pauseLayer').classList.add('hidden');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);hud()}
+function end(reason){if(!s||!s.run)return;s.run=0;const n=Math.floor(s.coins);meta.bank+=n;meta.best=Math.max(meta.best,Math.floor(s.d));save();$('rDist').textContent=Math.floor(s.d)+' м';$('rCoins').textContent=n;$('rDel').textContent=s.del;$('rCombo').textContent='x'+s.max;$('overTitle').textContent=reason;$('over').classList.remove('hidden');garage();vib([40,40,80])}
+function hud(){$('dist').textContent=Math.floor(s.d)+' м';$('coins').textContent=Math.floor(s.coins);$('cargo').textContent=s.cargo+'/3';$('hp').textContent=Math.max(0,Math.ceil(s.hp));$('fuel').style.width=clamp(s.fuel/s.maxFuel*100,0,100)+'%'}
+function spawnTraffic(){const l=Math.floor(Math.random()*5),k=Math.random()<.18?'bar':'car';s.o.push({k,x:lane(l),y:-90,w:k==='car'?36:45,h:k==='car'?66:28,spd:k==='car'?rnd(40,120):0,hit:0})}
+function spawnPickup(){const r=Math.random(),k=r<.5?'coin':r<.68?'fuel':r<.79?'repair':'pkg';s.o.push({k,x:lane(Math.floor(Math.random()*5)),y:-45,w:28,h:28})}
+function spawnGate(){if(!s.cargo)return;const l=Math.floor(Math.random()*4);s.o.push({k:'gate',x:lane(l)+road.lw*.5,y:-42,w:road.lw*2-8,h:28,hit:0})}
+const rect=o=>({x:o.x-o.w/2,y:o.y-o.h/2,w:o.w,h:o.h}),ov=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y,hp=o=>ov(rect(s.p),rect(o));
+function part(X,Y,col,n=8){for(let i=0;i<n;i++)s.parts.push({x:X,y:Y,vx:rnd(-80,80),vy:rnd(-80,30),life:rnd(.2,.55),max:.55,col})}
+function logic(o){
+ if(o.k==='coin'&&hp(o)){o.dead=1;s.coins+=2*s.combo;s.combo=Math.min(8,s.combo+.1);s.max=Math.max(s.max,Math.floor(s.combo));part(o.x,o.y,'#fbbf24',6)}
+ else if(o.k==='coin'){const R=55+meta.up.m*22,dx=s.p.x-o.x,dy=s.p.y-o.y,d=Math.hypot(dx,dy);if(d<R&&d>2){o.x+=dx/d*4.5;o.y+=dy/d*4.5}}
+ else if(o.k==='fuel'&&hp(o)){o.dead=1;s.fuel=Math.min(s.maxFuel,s.fuel+25);toast('+ ТОПЛИВО');part(o.x,o.y,'#22d3ee')}
+ else if(o.k==='repair'&&hp(o)){o.dead=1;s.hp=Math.min(100,s.hp+22);toast('+ РЕМОНТ');part(o.x,o.y,'#34d399')}
+ else if(o.k==='pkg'&&hp(o)){o.dead=1;if(s.cargo<3){s.cargo++;s.coins+=5;toast('📦 ПОСЫЛКА '+s.cargo+'/3')}else s.coins+=4}
+ else if(o.k==='gate'&&hp(o)&&!o.hit){o.hit=1;if(s.cargo){const r=35*s.combo;s.cargo--;s.del++;s.coins+=r;s.combo=Math.min(8,s.combo+1);s.max=Math.max(s.max,Math.floor(s.combo));toast('ДОСТАВКА +'+Math.floor(r));part(s.p.x,s.p.y,'#34d399',15);vib(20)}}
+ else if((o.k==='car'||o.k==='bar')&&hp(o)&&!o.hit&&s.p.inv<=0){o.hit=1;s.p.inv=.75;s.hp-=(o.k==='bar'?26:20)*(1-meta.up.a*.11);s.combo=1;s.speed=Math.max(170,s.speed-45);part(s.p.x,s.p.y,'#fb7185',14);vib(45);if(s.hp<=0)end('МАШИНА РАЗБИТА')}
+}
+function update(dt){if(!s||!s.run||s.pause)return;const boost=hold.b&&s.fuel>2,t=boost?365:235+Math.min(95,s.d/14);s.speed+=(t-s.speed)*Math.min(1,dt*2.2);s.d+=s.speed*dt*.095;s.fuel-=dt*(boost?2.25:.72);if(s.fuel<=0){s.fuel=0;end('ТОПЛИВО ЗАКОНЧИЛОСЬ');return}s.off=(s.off+s.speed*dt)%70;s.p.inv=Math.max(0,s.p.inv-dt);if(hold.l)s.p.tx-=330*dt;if(hold.r)s.p.tx+=330*dt;s.p.tx=clamp(s.p.tx,road.x+20,road.x+road.w-20);s.p.x+=(s.p.tx-s.p.x)*Math.min(1,dt*10);s.spawn-=dt;if(s.spawn<=0){spawnTraffic();s.spawn=Math.max(.38,1-s.d/1800)*rnd(.7,1.25)}s.pick-=dt;if(s.pick<=0){spawnPickup();s.pick=rnd(.75,1.55)}s.gate-=dt;if(s.gate<=0){spawnGate();s.gate=rnd(5.5,8)}for(const o of s.o){o.y+=(s.speed-(o.spd||0))*dt;logic(o);if(o.y>H+110)o.dead=1}s.o=s.o.filter(o=>!o.dead);for(const p of s.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=170*dt;p.life-=dt}s.parts=s.parts.filter(p=>p.life>0);hud()}
+function rr(X,Y,w,h,r,col){x.beginPath();x.roundRect?x.roundRect(X,Y,w,h,r):x.rect(X,Y,w,h);x.fillStyle=col;x.fill()}
+function drawCar(X,Y,col,me=0){x.save();x.translate(X,Y);if(me&&s.p.inv>0&&Math.floor(s.p.inv*12)%2===0)x.globalAlpha=.35;rr(-17,-32,34,64,8,col);rr(-11,-20,22,18,4,'#0f172a');rr(-11,8,22,17,4,'#172554');x.fillStyle='#fde68a';x.fillRect(-13,-31,8,4);x.fillRect(5,-31,8,4);x.fillStyle='#fb7185';x.fillRect(-13,27,8,4);x.fillRect(5,27,8,4);if(me){x.strokeStyle='#22d3ee';x.lineWidth=2;x.strokeRect(-19,-34,38,68)}x.restore()}
+function drawObj(o){if(o.k==='car')drawCar(o.x,o.y,'#475569');else if(o.k==='bar'){rr(o.x-o.w/2,o.y-o.h/2,o.w,o.h,5,'#b45309');x.fillStyle='#fde68a';x.fillRect(o.x-15,o.y-3,30,6)}else if(o.k==='coin'){x.fillStyle='#fbbf24';x.beginPath();x.arc(o.x,o.y,11,0,Math.PI*2);x.fill();x.fillStyle='#78350f';x.font='bold 12px sans-serif';x.textAlign='center';x.fillText('₽',o.x,o.y+4)}else if(o.k==='fuel'){rr(o.x-12,o.y-14,24,28,5,'#0891b2');x.fillStyle='white';x.font='16px sans-serif';x.textAlign='center';x.fillText('⚡',o.x,o.y+6)}else if(o.k==='repair'){x.fillStyle='#16a34a';x.fillRect(o.x-13,o.y-13,26,26);x.fillStyle='white';x.fillRect(o.x-4,o.y-10,8,20);x.fillRect(o.x-10,o.y-4,20,8)}else if(o.k==='pkg'){rr(o.x-13,o.y-12,26,24,4,'#92400e');x.fillStyle='#fde68a';x.fillRect(o.x-2,o.y-12,4,24)}else if(o.k==='gate'){x.fillStyle='#34d39944';x.fillRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);x.strokeStyle='#34d399';x.lineWidth=3;x.strokeRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);x.fillStyle='#a7f3d0';x.font='bold 11px sans-serif';x.textAlign='center';x.fillText('ДОСТАВКА',o.x,o.y+4)}}
+function draw(){if(!s)return;x.fillStyle='#050816';x.fillRect(0,0,W,H);x.fillStyle='#111827';x.fillRect(road.x,0,road.w,H);x.fillStyle='#334155';x.fillRect(road.x-5,0,5,H);x.fillRect(road.x+road.w,0,5,H);for(let i=1;i<5;i++){const X=road.x+i*road.lw;x.fillStyle='#64748b';for(let Y=-70+s.off;Y<H;Y+=70)x.fillRect(X-1.5,Y,3,31)}for(const o of s.o)drawObj(o);for(const p of s.parts){x.globalAlpha=clamp(p.life/p.max,0,1);x.fillStyle=p.col;x.fillRect(p.x-2,p.y-2,4,4)}x.globalAlpha=1;drawCar(s.p.x,s.p.y,'#0e7490',1);x.fillStyle='#ffffffaa';x.font='11px sans-serif';x.textAlign='left';x.fillText('x'+Math.floor(s.combo)+' combo',road.x+8,18)}
+function loop(now){const dt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;update(dt);draw();if(s&&s.run&&!s.pause)raf=requestAnimationFrame(loop)}
+function pause(v){if(!s||!s.run)return;s.pause=v;$('pauseLayer').classList.toggle('hidden',!v);cancelAnimationFrame(raf);if(!v){last=performance.now();raf=requestAnimationFrame(loop)}}
+$('pause').onclick=()=>s&&s.run&&pause(!s.pause);$('resume').onclick=()=>pause(0);$('start').onclick=start;$('retry').onclick=start;$('garage').onclick=()=>{$('over').classList.add('hidden');$('menu').classList.remove('hidden');garage()}
+function bind(id,k){const q=$(id),on=a=>{a.preventDefault();hold[k]=1},off=a=>{a.preventDefault();hold[k]=0};q.addEventListener('pointerdown',on);q.addEventListener('pointerup',off);q.addEventListener('pointercancel',off);q.addEventListener('pointerleave',off)}
+bind('left','l');bind('right','r');bind('boost','b');
+c.addEventListener('pointerdown',ev=>{if(!s||!s.run||s.pause)return;drag=1;move(ev)});c.addEventListener('pointermove',ev=>drag&&move(ev));c.addEventListener('pointerup',()=>drag=0);c.addEventListener('pointercancel',()=>drag=0);
+function move(ev){const q=c.getBoundingClientRect();s.p.tx=clamp((ev.clientX-q.left)/q.width*W,road.x+20,road.x+road.w-20)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&s?.run)pause(1)});garage();x.fillStyle='#050816';x.fillRect(0,0,W,H);
+})();
+</script>
+</body></html>
