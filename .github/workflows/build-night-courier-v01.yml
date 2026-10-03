@@ -1,0 +1,152 @@
+name: Build Night Courier v0.1 APK
+
+on:
+  push:
+    branches: [ apk-build-v10 ]
+    paths:
+      - 'night_courier_v01/**'
+      - '.github/workflows/build-night-courier-v01.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find /usr/local/lib/android/sdk/cmdline-tools -type f -name sdkmanager | head -n 1)"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+
+      - name: Restore permanent signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: deep-mine-web-debug-signing-v1
+          fail-on-cache-miss: true
+
+      - name: Prepare app
+        shell: bash
+        run: |
+          rm -rf android-web/app/src/main/assets/*
+          base64 -d night_courier_v01/index.html.gz.b64 | gzip -d > android-web/app/src/main/assets/index.html
+
+          rm -rf android-web/app/src/main/java/*
+          mkdir -p android-web/app/src/main/java/com/geodenix/nightcourier
+          cat > android-web/app/src/main/java/com/geodenix/nightcourier/MainActivity.java <<'JAVA'
+          package com.geodenix.nightcourier;
+          import android.app.Activity;
+          import android.graphics.Color;
+          import android.os.Bundle;
+          import android.view.View;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+              @Override public void onCreate(Bundle b){
+                  super.onCreate(b);
+                  immersive();
+                  webView=new WebView(this);
+                  webView.setBackgroundColor(Color.BLACK);
+                  webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+                  webView.setWebViewClient(new WebViewClient());
+                  WebSettings s=webView.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setAllowFileAccess(true);
+                  s.setMediaPlaybackRequiresUserGesture(false);
+                  webView.loadUrl("file:///android_asset/index.html");
+                  setContentView(webView);
+              }
+              private void immersive(){
+                  getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY|View.SYSTEM_UI_FLAG_FULLSCREEN|
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+              }
+              @Override protected void onResume(){super.onResume();immersive();if(webView!=null)webView.onResume();}
+              @Override protected void onPause(){if(webView!=null)webView.onPause();super.onPause();}
+          }
+          JAVA
+
+          cat > android-web/app/src/main/AndroidManifest.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <application android:allowBackup="true" android:hardwareAccelerated="true"
+              android:label="Ночной Курьер" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+              <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"
+                android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          XML
+
+          cat > android-web/app/build.gradle <<'GRADLE'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'com.geodenix.nightcourier'
+            compileSdk 35
+            signingConfigs {
+              debug {
+                storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+              }
+            }
+            defaultConfig {
+              applicationId "com.geodenix.nightcourier"
+              minSdk 24
+              targetSdk 35
+              versionCode 1
+              versionName "0.1"
+            }
+            buildTypes { debug { minifyEnabled false; signingConfig signingConfigs.debug } }
+            compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+          }
+          GRADLE
+
+          grep -q 'НОЧНОЙ' android-web/app/src/main/assets/index.html
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        working-directory: android-web
+        run: |
+          gradle --no-daemon :app:assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/NightCourier-v0.1.apk
+
+      - name: Verify APK
+        working-directory: android-web
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/NightCourier-v0.1.apk"
+          test -s "$APK"
+          unzip -p "$APK" assets/index.html | grep -q 'НОЧНОЙ'
+          /usr/local/lib/android/sdk/build-tools/35.0.1/aapt dump badging "$APK" | grep "package: name='com.geodenix.nightcourier'" | grep "versionCode='1'" | grep "versionName='0.1'"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NightCourier-v0.1-APK
+          path: android-web/app/build/outputs/apk/debug/NightCourier-v0.1.apk
+          if-no-files-found: error
+          retention-days: 30
