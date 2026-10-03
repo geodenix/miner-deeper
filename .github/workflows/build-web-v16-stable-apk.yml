@@ -31,12 +31,6 @@ jobs:
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
 
-      - name: Cache Night Courier signing key
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: night-courier-signing-v1
-
       - name: Prepare game assets
         shell: bash
         run: |
@@ -86,15 +80,6 @@ jobs:
               namespace 'com.geodenix.deepmine'
               compileSdk 35
 
-              signingConfigs {
-                  debug {
-                      storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
-                      storePassword "android"
-                      keyAlias "androiddebugkey"
-                      keyPassword "android"
-                  }
-              }
-
               defaultConfig {
                   applicationId "com.geodenix.nightcourier"
                   minSdk 24
@@ -106,7 +91,6 @@ jobs:
               buildTypes {
                   debug {
                       minifyEnabled false
-                      signingConfig signingConfigs.debug
                   }
                   release {
                       minifyEnabled false
